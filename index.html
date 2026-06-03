@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OrientaIA - Mentor Estratégico de Equador</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
+        .drop-cap::first-letter { font-size: 4rem; font-weight: 900; float: left; margin-top: 0.1rem; margin-right: 0.75rem; line-height: 0.8; color: #1e3a8a; text-shadow: 2px 2px 0px rgba(191, 219, 254, 0.5); }
+        .fade-in { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .tab-btn { transition: all 0.3s ease; }
+        .tab-btn.active { border-bottom-width: 4px; border-color: #1e3a8a; color: #1e3a8a; font-weight: 700; }
+        
+        .alt-container { transition: all 0.2s ease; }
+        .alt-container.eliminated { text-decoration: line-through; opacity: 0.4; filter: grayscale(100%); }
+        .alt-container.eliminated .tesoura-icon { color: #ef4444; transform: scale(1.1); }
+        .alt-container.correct-answer { background-color: #ecfdf5 !important; border-color: #10b981 !important; color: #064e3b !important; text-decoration: none !important; opacity: 1 !important; }
+        .alt-container.wrong-answer { background-color: #fef2f2 !important; border-color: #ef4444 !important; color: #7f1d1d !important; text-decoration: none !important; opacity: 1 !important; }
+        .alt-container.locked { pointer-events: none; }
+        
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .keyword { background-color: #fef08a; padding: 0 4px; border-radius: 4px; font-weight: 700; color: #1e3a8a; }
+        .banca-alert { background: #fffbeb; border: 2px dashed #fbbf24; border-left: 6px solid #fbbf24; }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <header class="bg-indigo-900 text-white shadow-xl sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center gap-3">
+                    <div class="bg-white/10 p-3 rounded-xl backdrop-blur-md border border-white/20">
+                        <i class="ph-bold ph-users-three text-3xl text-blue-300"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-black tracking-tight leading-none">Orienta<span class="text-blue-400">IA</span></h1>
+                        <p class="text-xs text-indigo-200 font-medium tracking-widest uppercase">Equador/RN - Orientador Social</p>
+                    </div>
+                </div>
+                <div class="hidden md:flex items-center gap-2 bg-indigo-800/50 px-4 py-2 rounded-full border border-indigo-700">
+                    <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                    <span class="text-sm font-semibold text-indigo-100">Foco FUNCERN</span>
+                </div>
+            </div>
+            
+            <nav class="flex space-x-8 mt-2 overflow-x-auto no-scrollbar">
+                <button onclick="switchTab('raio-x')" class="tab-btn active pb-3 px-2 text-indigo-100 hover:text-white font-medium whitespace-nowrap text-lg flex items-center gap-2" id="tab-raio-x">
+                    <i class="ph-bold ph-scan"></i> Raio-X do Edital
+                </button>
+                <button onclick="switchTab('cronograma')" class="tab-btn pb-3 px-2 text-indigo-300 hover:text-white font-medium whitespace-nowrap text-lg flex items-center gap-2" id="tab-cronograma">
+                    <i class="ph-bold ph-calendar-check"></i> Cronograma & Aulas (175 Qs)
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        <section id="view-raio-x" class="view-section fade-in"></section>
+
+        <section id="view-cronograma" class="view-section hidden fade-in">
+            <div class="mb-8 flex items-center justify-between bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div>
+                    <h2 class="text-3xl font-black text-slate-800 tracking-tight">Rota da Aprovação (8 Dias)</h2>
+                    <p class="text-slate-500 mt-1 text-lg">Cronograma blindado para a FUNCERN. 15 questões diárias intercaladas.</p>
+                </div>
+                <div class="text-right hidden sm:block">
+                    <div class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">Progresso Global</div>
+                    <div class="text-3xl font-black text-indigo-900" id="global-progress-text">0%</div>
+                </div>
+            </div>
+            <div id="cronograma-list" class="grid gap-4"></div>
+        </section>
+
+        <section id="view-aula" class="view-section hidden fade-in max-w-4xl mx-auto">
+            <button onclick="switchTab('cronograma')" class="mb-6 flex items-center gap-2 text-indigo-600 font-bold hover:text-indigo-800 transition-colors">
+                <i class="ph-bold ph-arrow-left"></i> Voltar ao Cronograma
+            </button>
+            
+            <div class="bg-indigo-900 rounded-3xl p-8 shadow-xl mb-8 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+                <div id="lesson-header-content" class="relative z-10"></div>
+                <div class="absolute bottom-0 left-0 h-2 bg-indigo-950 w-full">
+                    <div id="lesson-progress-bar" class="h-full bg-emerald-400 transition-all duration-1000 ease-out" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <article id="lesson-theory" class="bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-slate-200 mb-10 text-lg leading-relaxed text-slate-700"></article>
+
+            <div id="lesson-questions-area" class="mt-12 hidden">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="h-px bg-slate-300 flex-grow"></div>
+                    <h3 class="text-2xl font-black text-slate-800 flex items-center gap-2 uppercase tracking-wide">
+                        <i class="ph-bold ph-barbell text-indigo-600"></i> Bateria de Fixação
+                    </h3>
+                    <div class="h-px bg-slate-300 flex-grow"></div>
+                </div>
+                
+                <div id="questions-container" class="space-y-8"></div>
+
+                <div class="mt-12 text-center pb-20">
+                    <button id="btn-finish-lesson" onclick="finishLesson()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xl px-10 py-5 rounded-2xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 w-full md:w-auto">
+                        <i class="ph-bold ph-flag-checkered mr-2"></i> Finalizar e Ver Diagnóstico
+                    </button>
+                    <div id="temp-warning-container"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="diagnostic-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden transform scale-95 opacity-0 transition-all duration-300" id="diagnostic-content">
+            <div class="bg-indigo-900 p-8 text-center relative overflow-hidden">
+                <i class="ph-duotone ph-chart-polar absolute -left-10 -bottom-10 text-9xl text-white/10"></i>
+                <h2 class="text-3xl font-black text-white relative z-10">Boletim Estratégico</h2>
+                <p class="text-indigo-200 mt-2 relative z-10 text-lg">Diagnóstico de Desempenho da Aula</p>
+            </div>
+            
+            <div class="p-8">
+                <div class="flex justify-center items-center gap-8 mb-8">
+                    <div class="text-center">
+                        <div class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Nota Final</div>
+                        <div class="text-5xl font-black text-slate-800" id="diag-score">0/0</div>
+                    </div>
+                    <div class="w-px h-16 bg-slate-200"></div>
+                    <div class="text-center">
+                        <div class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Aproveitamento</div>
+                        <div class="text-5xl font-black text-emerald-500" id="diag-percent">0%</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-emerald-50 border border-emerald-100 p-5 rounded-2xl">
+                        <h4 class="font-black text-emerald-800 mb-2 flex items-center gap-2"><i class="ph-bold ph-trend-up"></i> Pontos Fortes</h4>
+                        <ul id="diag-strengths" class="text-emerald-700 text-sm space-y-1 font-medium list-disc pl-4"></ul>
+                    </div>
+                    <div class="bg-rose-50 border border-rose-100 p-5 rounded-2xl">
+                        <h4 class="font-black text-rose-800 mb-2 flex items-center gap-2"><i class="ph-bold ph-warning-circle"></i> Foco de Revisão Urgente</h4>
+                        <ul id="diag-weaknesses" class="text-rose-700 text-sm space-y-1 font-medium list-disc pl-4"></ul>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200 text-center">
+                    <i class="ph-fill ph-quotes text-3xl text-indigo-300 mb-2"></i>
+                    <p id="diag-quote" class="text-lg font-bold text-slate-700 italic"></p>
+                </div>
+                
+                <button onclick="closeDiagnostic()" class="mt-8 w-full bg-slate-800 hover:bg-slate-900 text-white font-bold text-lg py-4 rounded-xl transition-colors">
+                    Retornar ao Cronograma
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const concursoData = {
+            cargo: "Orientador Social",
+            banca: "FUNCERN",
+            vagas: "Cadastro de Reserva / Provimento Imediato",
+            salario: "R$ 1.950,00",
+            cargaHoraria: "40h semanais",
+            requisito: "Ensino médio completo.",
+            datasImportantes: [
+                { evento: "Inscrições Abertas", data: "Maio a Junho de 2026", icon: "ph-calendar-plus" },
+                { evento: "Limite para Pagamento", data: "10 de julho de 2026", icon: "ph-money" },
+                { evento: "Aplicações das Provas", data: "30 de agosto de 2026", icon: "ph-exam", highlight: true },
+                { evento: "Gabarito Preliminar", data: "31 de agosto de 2026", icon: "ph-list-checks" },
+                { evento: "Resultado Final", data: "30 de novembro de 2026", icon: "ph-trophy" }
+            ],
+            atribuicoes: `Atuar diretamente com famílias e indivíduos em situação de vulnerabilidade e risco social nos equipamentos do SUAS (CRAS e CREAS). Planejar, facilitar e mediar oficinas, encontros e atividades de convivência no Serviço de Convivência e Fortalecimento de Vínculos (SCFV). Estimular o protagonismo, a participação cidadã, a organização comunitária e a autonomia dos usuários. Realizar busca ativa e visitas domiciliares no território de Equador/RN. Trabalhar de forma articulada com a equipe técnica de referência (Assistentes Sociais e Psicólogos). Elaborar relatórios e preencher instrumentais do SUAS.`,
+            
+            conteudoProgramatico: [
+                { 
+                    disciplina: "Língua Portuguesa (Base FUNCERN e Afins)", 
+                    topicos: `
+                        <div class="space-y-4">
+                            <div class="flex gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                                <span class="font-black text-indigo-600 text-2xl shrink-0">1.</span>
+                                <div class="font-bold text-slate-800 text-lg pt-0.5">Compreensão e Interpretação: Tipologia e gêneros textuais. Mecanismos de coesão e coerência.</div>
+                            </div>
+                            <div class="flex gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                                <span class="font-black text-indigo-600 text-2xl shrink-0">2.</span>
+                                <div class="font-bold text-slate-800 text-lg pt-0.5">Semântica e Ortografia: Sinonímia, antonímia, polissemia. Novo Acordo Ortográfico. Acentuação gráfica.</div>
+                            </div>
+                            <div class="flex gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                                <span class="font-black text-indigo-600 text-2xl shrink-0">3.</span>
+                                <div class="font-bold text-slate-800 text-lg pt-0.5">Morfossintaxe: Classes de palavras. Concordância nominal e verbal. Regência nominal e verbal. Ocorrência da Crase. Pontuação.</div>
+                            </div>
+                        </div>
+                    ` 
+                },
+                { 
+                    disciplina: "Informática Básica", 
+                    topicos: `
+                        <div class="space-y-4">
+                            <div class="flex gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                                <span class="font-black text-indigo-600 text-2xl shrink-0">1.</span>
+                                <div class="font-bold text-slate-800 text-lg pt-0.5">Ambiente Operacional e Editores: Windows. Microsoft Word e Excel (versões atuais). Atalhos de teclado.</div>
+                            </div>
+                            <div class="flex gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                                <span class="font-black text-indigo-600 text-2xl shrink-0">2.</span>
+                                <div class="font-bold text-slate-800 text-lg pt-0.5">Internet e Segurança: Navegadores (Chrome, Firefox). Correio Eletrônico. Princípios de segurança, vírus, ransomware e phishing.</div>
+                            </div>
+                        </div>
+                    ` 
+                },
+                { 
+                    disciplina: "Conhecimentos Específicos & Legislação Local (Super Compilação)", 
+                    topicos: `
+                        <div class="space-y-4">
+                            <div class="mb-4 text-base font-bold text-slate-700 bg-amber-50 border border-amber-200 p-4 rounded-xl">
+                                <i class="ph-bold ph-info text-amber-600 mr-2"></i> Compilação estruturada cruzando editais FUNCERN, CPCON, GERCON e APICE para o cargo de Orientador Social.
+                            </div>
+                            <div class="flex gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                                <span class="font-black text-indigo-600 text-2xl shrink-0">1.</span>
+                                <div class="font-bold text-slate-800 text-lg pt-0.5">Legislação Social Básica: ECA (Estatuto da Criança e do Adolescente - Lei 8.069/90). Estatuto da Pessoa Idosa (Lei 10.741/03). Estatuto da Pessoa com Deficiência (LBI - Lei 13.146/15).</div>
+                            </div>
+                            <div class="flex gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                                <span class="font-black text-indigo-600 text-2xl shrink-0">2.</span>
+                                <div class="font-bold text-slate-800 text-lg pt-0.5">Políticas Públicas e SUAS: LOAS (Lei 8.742/93). Política Nacional de Assistência Social (PNAS/2004). Proteção Social Básica (CRAS, PAIF) e Especial (CREAS, PAEFI).</div>
+                            </div>
+                            <div class="flex gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                                <span class="font-black text-indigo-600 text-2xl shrink-0">3.</span>
+                                <div class="font-bold text-slate-800 text-lg pt-0.5">Prática Profissional: O Serviço de Convivência e Fortalecimento de Vínculos (SCFV). Papel do Orientador Social. Metodologias de trabalho com grupos e famílias. Ética profissional e sigilo.</div>
+                            </div>
+                            <div class="flex gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                                <span class="font-black text-indigo-600 text-2xl shrink-0">4.</span>
+                                <div class="font-bold text-slate-800 text-lg pt-0.5">Legislação Municipal de Equador/RN: Lei Orgânica do Município de Equador (Promulgada em 1990). Estatuto dos Servidores Públicos Municipais de Equador (Lei nº 384/97).</div>
+                            </div>
+                        </div>
+                    ` 
+                }
+            ]
+        };
+
+        // Função Q modificada para aceitar Comentário Único do Professor para economizar DOM e focar na explicação tática.
+        const Q = (text, opts, ansIndex, diff, explText) => {
+            let explHtml = '<div class="space-y-3 mt-4 pt-4 border-t border-slate-200">';
+            const letters = ['A', 'B', 'C', 'D']; // Padrão FUNCERN
+            opts.forEach((opt, idx) => {
+                const isCorrect = (idx === ansIndex);
+                const colorClass = isCorrect ? 'text-emerald-900 bg-emerald-50 border-emerald-300' : 'text-slate-700 bg-slate-50 border-slate-200';
+                const icon = isCorrect ? 'ph-check-circle text-emerald-600' : 'ph-x-circle text-rose-500';
+                explHtml += `
+                    <div class="p-3 rounded-xl border ${colorClass} text-sm flex gap-3">
+                        <i class="ph-fill ${icon} text-2xl shrink-0 mt-0.5"></i>
+                        <div>
+                            <div class="font-black mb-1 text-slate-800">Alternativa ${letters[idx]} ${isCorrect ? '<span class="text-emerald-600">(GABARITO)</span>' : ''}</div>
+                            <div class="font-medium opacity-90 leading-relaxed">${opt}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            explHtml += `<div class="mt-4 p-4 bg-indigo-50 border-l-4 border-indigo-500 rounded-r-xl text-indigo-900 font-medium text-sm"><strong>Comentário do Professor:</strong> ${explText}</div>`;
+            explHtml += '</div>';
+            return { t: text, o: opts, a: ansIndex, d: diff, e: explHtml };
+        };
+
+        const aulasDatabase = [
+            {
+                id: 1, dia: "Segunda-feira", disciplina: "Legislação Social", tema: "LOAS, SUAS e PNAS", progresso: 12,
+                teoria: `<p class="drop-cap">A</p><p class="text-lg leading-relaxed mb-4">Assistência Social, garantida pela Constituição de 88 e regulamentada pela LOAS (Lei 8.742/93), é direito do cidadão e dever do Estado, sendo política de Seguridade Social <strong>não contributiva</strong>.</p>
+                        <h4 class="text-xl font-bold mt-6 mb-3 text-indigo-900 border-l-4 border-indigo-500 pl-3">Estrutura do SUAS (PNAS 2004)</h4>
+                        <ul class="list-disc pl-6 space-y-2 mb-6">
+                            <li><span class="keyword">Proteção Social Básica:</span> Foco na <strong>prevenção</strong>. Atende famílias em vulnerabilidade, mas que <strong>ainda possuem vínculos familiares preservados</strong>. Equipamento: <strong>CRAS</strong>. Serviço principal: PAIF. Outros serviços: SCFV (onde o orientador atua).</li>
+                            <li><span class="keyword">Proteção Social Especial:</span> Foco em famílias cujos <strong>direitos foram violados</strong>.
+                                <ul class="list-circle pl-6 mt-1 text-slate-600">
+                                    <li><strong>Média Complexidade:</strong> Há violação (violência, trabalho infantil), mas os vínculos familiares ainda não foram totalmente rompidos. Equipamento: <strong>CREAS</strong>.</li>
+                                    <li><strong>Alta Complexidade:</strong> Rompimento de vínculos. Exige retirada do convívio familiar. Equipamentos: <strong>Abrigos, Casas-Lares, Asilos</strong>.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <h4 class="text-xl font-bold mt-6 mb-3 text-indigo-900 border-l-4 border-indigo-500 pl-3">Benefício de Prestação Continuada (BPC)</h4>
+                        <p class="mb-3 text-slate-700">Paga 1 salário mínimo mensal a idosos <strong>(65 anos+)</strong> ou Pessoas com Deficiência (sem limite de idade), desde que a renda familiar per capita seja igual ou inferior a 1/4 do salário mínimo.</p>`,
+                perolas: "A FUNCERN ama cobrar a diferença entre CRAS e CREAS. Memorize: CRAS é a porta de entrada para prevenir. CREAS é acionado quando o estrago (violação) já ocorreu.",
+                questoes: [
+                    // FÁCIL 1
+                    Q("A Assistência Social é uma política que compõe o tripé da Seguridade Social brasileira. Segundo a LOAS, ela é provida a quem dela necessitar:", ["Mediante contribuição prévia ao INSS.", "Apenas para aposentados e pensionistas do Estado.", "Independentemente de contribuição à Seguridade Social.", "Apenas aos indivíduos que estão desempregados há mais de 12 meses."], 2, 'Fácil', "Diferente da Previdência, a Assistência Social é não-contributiva."),
+                    // MÉDIA 1
+                    Q("O Centro de Referência de Assistência Social (CRAS) é a unidade pública responsável por ofertar serviços da:", ["Proteção Social Básica.", "Proteção Social Especial de Média Complexidade.", "Proteção Social Especial de Alta Complexidade.", "Proteção Previdenciária Continuada."], 0, 'Média', "O CRAS previne, logo pertence à Proteção Social Básica."),
+                    // DIFÍCIL 1
+                    Q("Uma família que reside em Equador/RN sofreu rompimento total de vínculos familiares, sendo necessário o acolhimento institucional (abrigo) das crianças. Essa situação se enquadra na Proteção Social:", ["Básica.", "Especial de Média Complexidade.", "Especial de Alta Complexidade.", "Primária de Prevenção."], 2, 'Difícil', "O rompimento de vínculos exige moradia transitória (abrigo), configurando Alta Complexidade."),
+                    // FÁCIL 2
+                    Q("O programa executado no CRAS e focado na prevenção por meio de encontros grupais intergeracionais, que frequentemente conta com o Orientador Social, é o:", ["PAEFI.", "SCFV.", "BPC.", "PNAE."], 1, 'Fácil', "O Serviço de Convivência e Fortalecimento de Vínculos (SCFV) atua em grupos complementando o trabalho com a família."),
+                    // MÉDIA 2
+                    Q("O Benefício de Prestação Continuada (BPC) garante o pagamento de um salário mínimo mensal para a pessoa com deficiência e para o idoso que comprovem não possuir meios de prover a própria manutenção. A idade mínima exigida por lei para o idoso acessar o BPC é de:", ["60 anos.", "65 anos.", "70 anos.", "55 anos."], 1, 'Média', "Atenção: O Estatuto considera idoso a partir dos 60, mas o BPC só paga a partir dos 65 anos."),
+                    // DIFÍCIL 2
+                    Q("Segundo a LOAS, as ações de Assistência Social são organizadas de forma descentralizada. O comando único das ações no âmbito de cada município fica a cargo da:", ["Prefeitura Municipal, através de sua respectiva Secretaria ou órgão equivalente.", "Superintendência Federal da Caixa Econômica.", "Delegacia de Polícia Civil.", "Câmara de Vereadores."], 0, 'Difícil', "O princípio da descentralização garante comando único em cada esfera. No município, a gestão é da Secretaria Municipal de Assistência Social (ou afim)."),
+                    // FÁCIL 3
+                    Q("O equipamento público do SUAS responsável por atender vítimas de violência doméstica, abuso sexual e trabalho infantil, onde os vínculos ainda não foram totalmente rompidos, é o:", ["Conselho Tutelar.", "CRAS.", "CREAS.", "Abrigo Institucional."], 2, 'Fácil', "Houve violação (trauma), mas a família ainda está em casa. Ação do CREAS (Média Complexidade)."),
+                    // MÉDIA 3
+                    Q("Sobre o controle social no SUAS, a LOAS instituiu os Conselhos de Assistência Social. Eles são instâncias com caráter:", ["Apenas consultivo e formado só por vereadores.", "Deliberativo e composição paritária entre governo e sociedade civil.", "Temporário, reunindo-se a cada 4 anos.", "Fiscalizador restrito às ONGs particulares."], 1, 'Média', "Os Conselhos decidem (deliberam) e têm cadeiras divididas meio a meio (paridade) entre governo e sociedade civil."),
+                    // DIFÍCIL 3
+                    Q("O critério de renda familiar 'per capita' legalmente exigido para concessão do BPC é que seja:", ["Igual ou inferior a meio (1/2) salário mínimo.", "Igual ou inferior a um quarto (1/4) do salário mínimo.", "Inferior a três salários mínimos.", "Isento de limite de renda caso seja deficiência severa."], 1, 'Difícil', "O critério objetivo da LOAS para miserabilidade no BPC é rigoroso: <= 1/4 do salário mínimo por pessoa da casa."),
+                    // FÁCIL 4
+                    Q("A quem compete gerir o Fundo Municipal de Assistência Social (FMAS) em Equador/RN?", ["Ao Prefeito e ao Secretário de Saúde.", "Ao Gestor da Assistência Social municipal, sob orientação do Conselho Municipal.", "Exclusivamente ao Ministério do Desenvolvimento Social em Brasília.", "Ao INSS."], 1, 'Fácil', "Os fundos municipais são geridos pelas Secretarias Municipais com fiscalização dos Conselhos Municipais."),
+                    // MÉDIA 4
+                    Q("O Serviço de Proteção e Atendimento Especializado a Famílias e Indivíduos (PAEFI) é ofertado obrigatoriamente no:", ["CRAS.", "CREAS.", "Posto de Saúde.", "Sindicato dos Trabalhadores."], 1, 'Média', "No CRAS ocorre o PAIF. No CREAS ocorre o PAEFI (Atendimento Especializado)."),
+                    // DIFÍCIL 4
+                    Q("Pela PNAS/2004, a centralidade das ações da assistência social está focada no(a):", ["Indivíduo de forma isolada.", "Família, compreendida como núcleo básico de sociabilidade.", "Empresa onde o chefe da casa trabalha.", "Apenas na criança abandonada."], 1, 'Difícil', "A matricialidade sociofamiliar é o eixo estruturante do SUAS. Tudo gira em torno de proteger e fortalecer a família inteira."),
+                    // FÁCIL 5
+                    Q("O acesso aos benefícios e serviços do SUAS sofre alguma restrição em relação à crença religiosa ou raça do usuário?", ["Sim, deve-se priorizar religiões cristãs.", "Sim, apenas brancos podem acessar o BPC.", "Não, há garantia de igualdade de direitos e respeito à dignidade do cidadão sem qualquer discriminação.", "Apenas o Prefeito pode aprovar o acesso nesses casos."], 2, 'Fácil', "A LOAS garante respeito à diversidade e repudia discriminações."),
+                    // MÉDIA 5
+                    Q("A política de Assistência Social realiza suas ações em conjunto com quais outras políticas para formar o tripé da Seguridade Social?", ["Saúde e Educação.", "Previdência e Habitação.", "Saúde e Previdência Social.", "Trabalho e Meio Ambiente."], 2, 'Média', "Art. 194 da Constituição Federal: A Seguridade Social compreende Saúde, Previdência e Assistência Social."),
+                    // DIFÍCIL 5
+                    Q("O pagamento do BPC (Benefício de Prestação Continuada) pode ser acumulado com outro benefício da Seguridade Social (como uma aposentadoria)?", ["Sim, em qualquer caso de necessidade.", "Não, salvo com a assistência médica e a pensão especial de natureza indenizatória.", "Sim, se a aposentadoria for inferior a um salário mínimo.", "Não, o BPC é um empréstimo bancário que não permite acúmulo."], 1, 'Difícil', "O Art. 20, § 4º da LOAS proíbe o acúmulo do BPC com benefícios previdenciários. As únicas exceções são assistência médica e pensões indenizatórias específicas.")
+                ]
+            },
+
+            {
+                id: 2, dia: "Terça-feira", disciplina: "Português", tema: "Tipologia, Sintaxe e Crase (FUNCERN)", progresso: 25,
+                teoria: `<p class="drop-cap">A</p><p class="text-lg leading-relaxed mb-4">FUNCERN foca muito na aplicação prática do idioma. Não pede decoreba de conceitos, mas sim a função da palavra ou da vírgula dentro de um texto.</p>
+                         <h4 class="text-xl font-bold mt-6 mb-3 text-indigo-900 border-l-4 border-indigo-500 pl-3">Dica de Concordância</h4>
+                         <ul class="list-disc pl-6 space-y-2 mb-6">
+                            <li>O verbo <strong>HAVER</strong> no sentido de existir ou acontecer é IMPESSOAL. Ele não tem sujeito e, portanto, <strong>não vai para o plural</strong>. Ex: <em>Houve</em> (e não houveram) muitos problemas.</li>
+                            <li>O verbo <strong>FAZER</strong> indicando tempo decorrido também é IMPESSOAL. Ex: <em>Faz</em> (e não fazem) dez anos que moro aqui.</li>
+                         </ul>
+                         <h4 class="text-xl font-bold mt-6 mb-3 text-indigo-900 border-l-4 border-indigo-500 pl-3">A Fusão da Crase</h4>
+                         <p class="mb-3 text-slate-700">Nunca use crase antes de verbos, palavras masculinas, pronomes pessoais e indefinidos (todos, ninguém). Use crase nas locuções femininas (às vezes, à noite) e quando a palavra feminina aceitar a substituição por uma masculina pedindo "AO" (Fui à praça -> Fui ao parque).</p>`,
+                perolas: "A FUNCERN ama cobrar o 'onde' vs 'aonde'. 'Onde' indica lugar fixo (Onde você está?). 'Aonde' indica movimento, exigindo verbos como ir/chegar (Aonde você vai?).",
+                questoes: [
+                    // FÁCIL 1
+                    Q("Assinale a frase em que o emprego da crase está CORRETO:", ["O Orientador começou a preparar os materiais.", "Entreguei o relatório do SCFV a todos os colegas.", "O pagamento da conta foi feito a prazo.", "Fomos à prefeitura resolver o problema do cadastro."], 3, 'Fácil', "Antes de verbo (preparar), pronome (todos) e masculino (prazo) não há crase. 'Fomos ao prédio / Fomos à prefeitura' é correto."),
+                    // MÉDIA 1
+                    Q("Em 'Choveu muito ontem, MAS a oficina aconteceu normalmente', a conjunção em destaque pode ser substituída sem alterar o sentido por:", ["Portanto.", "Porque.", "Todavia.", "Por isso."], 2, 'Média', "As conjunções adversativas (ideia de oposição) são: mas, porém, contudo, todavia, entretanto."),
+                    // DIFÍCIL 1
+                    Q("Marque a opção que apresenta um erro de concordância verbal segundo a norma padrão:", ["Faz três meses que comecei a trabalhar no CRAS.", "Existem muitas vagas no concurso.", "Houveram debates acalorados durante a reunião da equipe.", "Vende-se uma casa de apoio no bairro."], 2, 'Difícil', "O verbo HAVER no sentido de acontecer/existir NÃO tem plural. O correto é: 'HOUVE debates acalorados'."),
+                    // FÁCIL 2
+                    Q("O texto que tem como característica principal contar uma história, com personagens, tempo e espaço definidos, é do tipo:", ["Descritivo.", "Injuntivo.", "Narrativo.", "Dissertativo."], 2, 'Fácil', "A narração evolui no tempo com personagens atuando em um espaço."),
+                    // MÉDIA 2
+                    Q("Nas palavras 'CAIXA' e 'PRATO', encontramos, respectivamente:", ["Dígrafo e Encontro Vocálico.", "Ditongo e Encontro Consonantal.", "Hiato e Dígrafo.", "Encontro Consonantal e Ditongo."], 1, 'Média', "CAI-XA tem um ditongo decrescente (ai). PRA-TO tem um encontro de duas consoantes faladas juntas (pr)."),
+                    // DIFÍCIL 2
+                    Q("Assinale a alternativa onde a vírgula foi usada de forma INCORRETA:", ["Ontem à noite, revisamos as apostilas.", "O prefeito de Equador, assinou a lei sancionando o concurso.", "Maria, a nova assistente social, é muito competente.", "João, traga os formulários do CadÚnico."], 1, 'Difícil', "Erro crasso de sintaxe: Nunca se separa o Sujeito (O prefeito de Equador) do Verbo (assinou) com uma vírgula única."),
+                    // FÁCIL 3
+                    Q("Qual das palavras abaixo teve seu acento agudo abolido pelo Novo Acordo Ortográfico?", ["Máquina.", "Página.", "Assembleia.", "Lápis."], 2, 'Fácil', "O Novo Acordo retirou o acento dos ditongos abertos (éi, ói) em palavras PAROXÍTONAS (as-sem-blei-a, i-dei-a, jo-ia)."),
+                    // MÉDIA 3
+                    Q("Em 'Ele ratificou tudo o que havia dito no processo', o verbo destacado significa:", ["Anulou.", "Corrigiu.", "Confirmou.", "Negou."], 2, 'Média', "Ratificar = Confirmar. Retificar = Corrigir."),
+                    // DIFÍCIL 3
+                    Q("O emprego de 'Onde' e 'Aonde' está CORRETO em qual alternativa?", ["Aonde você mora em Equador?", "Não sei onde ir depois do trabalho.", "A cidade onde nasci fica no Seridó.", "Onde você vai tão apressado?"], 2, 'Difícil', "Mora em um lugar fixo (Onde). Vai a algum lugar (Aonde). A alternativa C está perfeita, indica lugar fixo."),
+                    // FÁCIL 4
+                    Q("As palavras 'Cessão', 'Seção' e 'Sessão' possuem o mesmo som, mas escritas e significados diferentes. Elas são exemplos de palavras:", ["Antônimas.", "Homófonas.", "Sinônimas.", "Polissêmicas."], 1, 'Fácil', "Homófonas: Homo (igual) + Fono (som). Têm o mesmo som na fala."),
+                    // MÉDIA 4
+                    Q("A divisão silábica correta da palavra EXCEÇÃO é:", ["Ex-ce-ção.", "E-xce-ção.", "Exc-e-ção.", "Ex-ceç-ão."], 0, 'Média', "O dígrafo 'xc' se separa em sílabas diferentes."),
+                    // DIFÍCIL 4
+                    Q("Identifique a função sintática do termo em destaque: 'Os orientadores chegaram EXAUSTOS ao CRAS.'", ["Adjunto Adverbial de Modo.", "Objeto Direto.", "Predicativo do Sujeito.", "Aposto explicativo."], 2, 'Difícil', "A palavra atribui uma característica/estado ao sujeito 'orientadores', mas foi deslocada na frase, funcionando como predicativo."),
+                    // FÁCIL 5
+                    Q("O manual de instruções de um celular e a receita de um bolo pertencem à tipologia textual:", ["Descritiva.", "Narrativa.", "Dissertativa.", "Injuntiva."], 3, 'Fácil', "Tipologia injuntiva orienta, instrui ou comanda ações, usando verbos no imperativo (Ligue, asse, corte)."),
+                    // MÉDIA 5
+                    Q("O plural de 'Cidadão' e 'Guarda-chuva' é, respectivamente:", ["Cidadãos / Guarda-chuvas.", "Cidadões / Guardas-chuvas.", "Cidadães / Guardas-chuva.", "Cidadãos / Guardas-chuva."], 0, 'Média', "Cidadão pluraliza com 's'. Guarda-chuva (Verbo + Substantivo) só pluraliza o substantivo."),
+                    // DIFÍCIL 5
+                    Q("A palavra que justifica seu acento gráfico pela mesma regra de 'DÍGRAFO' é:", ["Saúde.", "Amável.", "Mecânico.", "Café."], 2, 'Difícil', "DÍ-gra-fo é proparoxítona. Me-câ-ni-co também é proparoxítona. Todas as proparoxítonas são acentuadas.")
+                ]
+            },
+
+            {
+                id: 3, dia: "Quarta-feira", disciplina: "ECA e Estatuto do Idoso", tema: "Leis de Proteção Específicas", progresso: 37,
+                teoria: `<p class="drop-cap">A</p><p class="text-lg leading-relaxed mb-4">Constituição Federal e as leis específicas adotaram doutrinas protetivas para as pontas da vida: crianças e idosos.</p>
+                         <h4 class="text-xl font-bold mt-6 mb-3 text-indigo-900 border-l-4 border-indigo-500 pl-3">Estatuto da Criança e do Adolescente (ECA - 1990)</h4>
+                         <ul class="list-disc pl-6 space-y-2 mb-6">
+                            <li><span class="keyword">Doutrina da Proteção Integral:</span> A criança não é mais vista como "menor infrator" abandonado pelo Estado, mas sim como sujeito de direitos em condição peculiar de desenvolvimento.</li>
+                            <li><strong>Idades:</strong> Criança é quem tem <strong>até 12 anos incompletos</strong>. Adolescente é quem tem <strong>entre 12 e 18 anos</strong>.</li>
+                            <li><strong>Infracional:</strong> Criança que furta NÃO sofre medida socioeducativa (não é internada). Sofre Medida Protetiva (Conselho Tutelar). Adolescente sofre Medida Socioeducativa (Ex: Internação, Prestação de Serviços Comunitários).</li>
+                         </ul>
+                         <h4 class="text-xl font-bold mt-6 mb-3 text-indigo-900 border-l-4 border-indigo-500 pl-3">Estatuto da Pessoa Idosa (2003)</h4>
+                         <p class="mb-3 text-slate-700">Idoso é pessoa com <strong>60 anos ou mais</strong>. Foi garantida a <strong>Prioridade Especial</strong> (Super prioridade) para os <strong>maiores de 80 anos</strong>, que passam na frente dos demais idosos nos atendimentos.</p>`,
+                perolas: "O trabalho é PROIBIDO antes dos 16 anos. A única brecha na lei brasileira é a condição de APRENDIZ, permitida a partir dos 14 anos.",
+                questoes: [
+                    // FÁCIL 1
+                    Q("Pelo ECA, considera-se adolescente a pessoa com idade entre:", ["10 e 18 anos.", "12 e 18 anos de idade.", "14 e 21 anos.", "16 e 18 anos."], 1, 'Fácil', "Art. 2º do ECA cravou 12 a 18 anos para adolescentes."),
+                    // MÉDIA 1
+                    Q("Dentre as garantias previstas no Estatuto do Idoso para atendimento nos órgãos públicos de Equador/RN, foi criada a prioridade especial sobre os demais idosos para pessoas maiores de:", ["65 anos.", "70 anos.", "75 anos.", "80 anos."], 3, 'Média', "Os maiores de 80 anos detêm a super prioridade na fila de espera."),
+                    // DIFÍCIL 1
+                    Q("Uma criança de 11 anos é apreendida cometendo ato infracional análogo a roubo com ameaça. Pela lei do ECA, a autoridade deve:", ["Aplicar medida socioeducativa de internação por até 3 anos.", "Prendê-la em cela comum separada dos adultos.", "Aplicar apenas medidas de proteção através do Conselho Tutelar.", "Multar os pais em 10 salários mínimos e liberar a criança na rua."], 2, 'Difícil', "Atenção máxima: CRIANÇA nunca recebe medida socioeducativa punitiva. Ela recebe medida de proteção do Conselho Tutelar."),
+                    // FÁCIL 2
+                    Q("O Conselho Tutelar é um órgão essencial na rede de proteção municipal. Segundo o ECA, ele é composto por membros escolhidos pela:", ["Indicação direta do Juiz da cidade.", "Nomeação do Prefeito Municipal.", "Votação da população local a cada 4 anos.", "Promoção de servidores do CRAS."], 2, 'Fácil', "Os conselheiros tutelares são eleitos pela sociedade civil por meio de voto."),
+                    // MÉDIA 2
+                    Q("No que tange à profissionalização e ao trabalho, é proibido qualquer trabalho a menores de dezesseis anos de idade, SALVO na condição de:", ["Trabalhador noturno rural.", "Aprendiz, a partir de quatorze anos.", "Estagiário, a partir de doze anos.", "Menor infrator em prestação de serviços."], 1, 'Média', "A aprendizagem é o único contrato legal de trabalho permitido aos 14 anos."),
+                    // DIFÍCIL 2
+                    Q("O Conselho Tutelar é um órgão:", ["Jurisdicional, composto por juízes de direito que aplicam penas criminais.", "Permanente e autônomo, não jurisdicional, encarregado de zelar pelos direitos da criança.", "Executivo, pertencente à Polícia Militar para efetuar prisões de menores.", "Temporário, ativado apenas durante as eleições."], 1, 'Difícil', "Não é tribunal (não jurisdicional) e tem autonomia funcional."),
+                    // FÁCIL 3
+                    Q("Qual a base filosófica do ECA que substituiu a antiga Doutrina da Situação Irregular?", ["Doutrina da Proteção Integral.", "Doutrina do Menor Infrator.", "Doutrina da Punição Imediata.", "Doutrina da Institucionalização."], 0, 'Fácil', "A Proteção Integral enxerga a criança como sujeito de direitos plenos."),
+                    // MÉDIA 3
+                    Q("Segundo o Estatuto do Idoso, a garantia de transporte coletivo urbano e semiurbano gratuito é obrigatória e assegurada em lei federal a partir de qual idade?", ["60 anos.", "65 anos.", "70 anos.", "80 anos."], 1, 'Média', "Na lei federal a gratuidade no ônibus urbano é taxativa aos 65 anos (dos 60 aos 65 fica a critério da lei municipal)."),
+                    // DIFÍCIL 3
+                    Q("Para viajar desacompanhada dos pais para comarca fora da região metropolitana, uma criança ou adolescente necessita de autorização judicial. O ECA estabelece essa obrigatoriedade de autorização para menores de:", ["12 anos.", "14 anos.", "16 anos.", "18 anos."], 2, 'Difícil', "Mudança recente no ECA (Lei 13.812/19): Nenhuma criança ou adolescente menor de 16 (dezesseis) anos poderá viajar sozinho para fora da comarca sem autorização."),
+                    // FÁCIL 4
+                    Q("Em caso de suspeita ou confirmação de maus-tratos contra criança, a escola ou qualquer cidadão tem o dever de comunicar o fato ao:", ["Prefeito.", "Conselho Tutelar da localidade.", "Tribunal Superior Eleitoral.", "INSS."], 1, 'Fácil', "O Conselho Tutelar é o acionamento primário nas suspeitas de maus-tratos."),
+                    // MÉDIA 4
+                    Q("No Estatuto do Idoso, o direito ao respeito consiste na:", ["Internação obrigatória em asilos aos 75 anos.", "Inviolabilidade da integridade física, psíquica e moral, abrangendo imagem e autonomia.", "Proibição do idoso de administrar seus bens e finanças.", "Exclusão do convívio familiar para sua própria segurança física."], 1, 'Média', "O respeito abrange a preservação da dignidade e autonomia da pessoa idosa."),
+                    // DIFÍCIL 4
+                    Q("Qual ato listado abaixo configura violação dos direitos do idoso passível de punição segundo seu Estatuto?", ["Reter o cartão magnético de conta bancária relativo a benefício ou aposentadoria do idoso para assegurar recebimento de dívida.", "Oferecer meia entrada em eventos culturais e esportivos.", "Garantir o BPC ao idoso de 65 anos em extrema pobreza.", "Conceder prioridade no atendimento do Sistema Único de Saúde."], 0, 'Difícil', "Reter o cartão de benefício do idoso é crime previsto no Estatuto (Art. 104)."),
+                    // FÁCIL 5
+                    Q("A primeira e mais importante garantia de direitos listada tanto no ECA quanto no Estatuto do Idoso é o direito fundamental à:", ["Vida e à saúde.", "Herança.", "Propriedade privada.", "Posse de arma de fogo para defesa."], 0, 'Fácil', "Sem a vida e a saúde, nenhum outro direito se sustenta."),
+                    // MÉDIA 5
+                    Q("Uma adolescente de 16 anos é flagrada traficando drogas no município. Ao invés da prisão convencional aplicada a adultos, a juíza poderá aplicar a ela:", ["Uma Medida Protetiva de doação de cestas básicas.", "Uma Medida Socioeducativa, que pode chegar à internação em estabelecimento educacional.", "Pena de morte.", "Multa simples de trânsito ao pai."], 1, 'Média', "Adolescentes não sofrem penas do Código Penal, mas sim Medidas Socioeducativas do ECA."),
+                    // DIFÍCIL 5
+                    Q("Sobre o trabalho do adolescente aprendiz amparado pelo ECA, é assegurado a ele:", ["Salário mínimo integral independentemente das horas trabalhadas e dispensa da escola.", "Direitos trabalhistas e previdenciários, com obrigatoriedade de frequentar a escola.", "Trabalho no horário noturno se o salário for dobrado.", "Trabalho em condições perigosas ou insalubres com uso de EPI."], 1, 'Difícil', "O aprendiz tem que ir à escola, tem direitos celetistas e jamais pode trabalhar em local insalubre/perigoso ou de noite.")
+                ]
+            },
+
+            {
+                id: 4, dia: "Quinta-feira", disciplina: "Informática Básica", tema: "Office, Windows e Segurança", progresso: 50,
+                teoria: `<p class="drop-cap">A</p><p class="text-lg leading-relaxed mb-4">Informática em concursos de Equador exige o conhecimento prático da rotina de escritório e navegação segura.</p>
+                         <h4 class="text-xl font-bold mt-6 mb-3 text-indigo-900 border-l-4 border-indigo-500 pl-3">Hardware x Software</h4>
+                         <ul class="list-disc pl-6 space-y-2 mb-6">
+                            <li><span class="keyword">Hardware (Parte Física):</span> HD e SSD guardam os arquivos da prefeitura permanentemente (não apagam quando desliga a luz). A memória <strong>RAM</strong> é a mesa de trabalho, se a luz cair, ela perde tudo (é volátil).</li>
+                            <li><span class="keyword">Software (Lógico):</span> Windows (Sistema Operacional), Word (.docx), Excel (.xlsx), Chrome (Navegador).</li>
+                         </ul>
+                         <h4 class="text-xl font-bold mt-6 mb-3 text-indigo-900 border-l-4 border-indigo-500 pl-3">Ameaças Digitais</h4>
+                         <p class="mb-3 text-slate-700"><strong>Phishing:</strong> Site clonado falso (ex: um email com link para o "Banco do Brasil" pedindo senha). <strong>Ransomware:</strong> Vírus perigoso que criptografa (tranca com chave e embaralha) os arquivos do computador e exige pagamento de resgate para liberar.</p>`,
+                perolas: "Atalhos: F2 (Renomear arquivo no Windows). Shift + Delete (Apaga o arquivo sumindo com ele direto, sem passar pela Lixeira).",
+                questoes: [
+                    // FÁCIL 1
+                    Q("O servidor finalizou seu relatório de visitas do SCFV no Microsoft Word e deseja imprimir o documento. O atalho de teclado universal para acionar a impressão é:", ["CTRL + Z", "CTRL + P", "CTRL + C", "CTRL + X"], 1, 'Fácil', "P = Print (Imprimir)."),
+                    // MÉDIA 1
+                    Q("Qual componente do computador é responsável por armazenar permanentemente os arquivos e relatórios do usuário, mesmo quando a máquina é desligada da energia elétrica?", ["Memória RAM.", "Placa de Vídeo.", "Disco Rígido (HD) ou SSD.", "Fonte de Alimentação."], 2, 'Média', "O HD (ou SSD mais moderno) guarda os dados em massa. A RAM apaga tudo ao desligar."),
+                    // DIFÍCIL 1
+                    Q("Ao selecionar um arquivo na área de trabalho do Windows e pressionar as teclas 'SHIFT + DELETE', o que acontece?", ["O arquivo vai para a Lixeira, podendo ser restaurado depois.", "O arquivo é copiado para a Nuvem.", "O arquivo é excluído permanentemente, sem passar pela Lixeira.", "O arquivo é renomeado para 'Deletado'."], 2, 'Difícil', "Segurar o SHIFT força a exclusão definitiva, ignorando a rede de proteção da lixeira."),
+                    // FÁCIL 2
+                    Q("Para navegar por sites na Internet no computador da Secretaria de Assistência Social de Equador, você precisa abrir um software da categoria 'Navegador Web (Browser)'. Qual das opções é um Navegador?", ["Microsoft Word.", "Google Chrome.", "Windows 11.", "Google Drive."], 1, 'Fácil', "Chrome, Mozilla Firefox, Microsoft Edge e Safari são navegadores."),
+                    // MÉDIA 2
+                    Q("No envio de e-mails, o campo Cco (Cópia Carbono Oculta) tem a finalidade específica de:", ["Anexar arquivos pesados.", "Marcar a mensagem como urgente.", "Enviar cópias para destinatários protegendo a privacidade, escondendo os endereços uns dos outros.", "Salvar a mensagem apenas como rascunho."], 2, 'Média', "Cco = Blind (Cego). Oculta a lista de envio, evitando spam e preservando a privacidade."),
+                    // DIFÍCIL 2
+                    Q("Um golpe comum na internet envia um e-mail falso se passando pelo banco do servidor, pedindo que ele clique em um link e atualize sua senha, levando a uma página clonada. Essa técnica é chamada de:", ["Ransomware.", "DDoS.", "Backup.", "Phishing."], 3, 'Difícil', "A 'pescaria' enganosa de dados pessoais via links falsos é o Phishing."),
+                    // FÁCIL 3
+                    Q("A tecla de atalho 'CTRL + C' e 'CTRL + V' no Windows servem, respectivamente, para:", ["Salvar e Imprimir.", "Copiar e Colar.", "Desfazer e Refazer.", "Recortar e Apagar."], 1, 'Fácil', "O atalho mais usado na rotina de escritórios."),
+                    // MÉDIA 3
+                    Q("Assinale a alternativa que traz a extensão de arquivo nativa das versões mais modernas do Microsoft Excel:", [".docx", ".pptx", ".xlsx", ".pdf"], 2, 'Média', "O X indica XML moderno. Docx (Word), pptx (PowerPoint) e xlsx (Excel)."),
+                    // DIFÍCIL 3
+                    Q("O que caracteriza a infecção de um computador por um malware do tipo 'Ransomware'?", ["Ele fica mostrando propagandas infinitas na tela.", "Ele 'sequestra' os dados do usuário usando criptografia forte e exige pagamento de resgate para devolver o acesso.", "Ele acelera o cooler do processador até queimar a máquina.", "Ele formata o disco rígido apagando o Windows na mesma hora."], 1, 'Difícil', "Ransom (resgate). É a maior ameaça a prefeituras e hospitais atualmente."),
+                    // FÁCIL 4
+                    Q("O Microsoft Windows é um software da categoria de:", ["Editor de Texto.", "Sistema Operacional.", "Antivírus.", "Planilha de Cálculos."], 1, 'Fácil', "É o sistema básico (O Cérebro lógico) que gerencia a máquina para os outros programas rodarem em cima."),
+                    // MÉDIA 4
+                    Q("Selecionei um arquivo de texto e apertei a tecla F2 no Windows. Qual ação se inicia?", ["O arquivo é excluído.", "O arquivo é impresso.", "Abre-se a caixa de edição para renomear o arquivo.", "O arquivo é ocultado."], 2, 'Média', "F2 é o atalho rápido para alterar o nome de arquivos ou pastas."),
+                    // DIFÍCIL 4
+                    Q("O 'S' presente na sigla de sites HTTPS:// indica que a navegação naquela página possui:", ["Simplicidade e rapidez de código.", "Sistema fechado em intranet.", "Segurança com transmissão de dados criptografada.", "Sem bloqueios ou firewalls."], 2, 'Difícil', "S = Secure. Indica o uso de certificados de criptografia (como o SSL/TLS) blindando a conexão do navegador."),
+                    // FÁCIL 5
+                    Q("Qual atalho é capaz de desfazer o último erro que você cometeu ao digitar no Word?", ["CTRL + P", "CTRL + A", "CTRL + Z", "ALT + F4"], 2, 'Fácil', "CTRL + Z desfaz as trapalhadas recentes."),
+                    // MÉDIA 5
+                    Q("Armazenar documentos na 'Nuvem' (Cloud Computing) usando o Google Drive significa:", ["Salvar os arquivos fisicamente em um pendrive com Wi-Fi.", "Gravar os arquivos em mega servidores de datacenters na Internet, permitindo acessá-los de qualquer aparelho logado.", "Apagar os arquivos do computador para liberar espaço e não salvá-los em nenhum lugar.", "Usar satélites espaciais para acelerar o processador local."], 1, 'Média', "A Nuvem hospeda seus arquivos na internet (servidores remotos de grandes empresas), tirando-os do disco local."),
+                    // DIFÍCIL 5
+                    Q("Para selecionar todo o conteúdo de um documento no Microsoft Word configurado para o idioma Português-BR, o usuário deve acionar o atalho:", ["CTRL + A", "CTRL + S", "CTRL + T", "CTRL + W"], 2, 'Difícil', "Atenção: No idioma inglês (ou no navegador) é CTRL+A (All). Mas no Word Brasileiro é CTRL+T (Tudo).")
+                ]
+            },
+            
+            {
+                id: 5, dia: "Sexta-feira", disciplina: "Legislação de Equador", tema: "LOM e Estatuto do Servidor", progresso: 62,
+                teoria: `<p class="drop-cap">E</p><p class="text-lg leading-relaxed mb-4">Esta aula foca na estrutura legal da cidade: A Lei Orgânica de Equador (a "Constituição" da cidade) e o Estatuto dos Servidores (Lei 384/97).</p>
+                         <h4 class="text-xl font-bold mt-6 mb-3 text-indigo-900 border-l-4 border-indigo-500 pl-3">Lei Orgânica de Equador/RN</h4>
+                         <ul class="list-disc pl-6 space-y-2 mb-6">
+                            <li><strong>Poderes:</strong> Executivo (Prefeito) e Legislativo (Câmara de Vereadores). <strong>Não existe</strong> Poder Judiciário na esfera municipal.</li>
+                            <li><strong>Veto:</strong> O Prefeito tem o prazo de <strong>15 dias úteis</strong> para vetar um projeto aprovado pela Câmara. O silêncio gera aprovação (sanção tácita).</li>
+                            <li><strong>Requisitos de Emenda:</strong> Para alterar a Lei Orgânica, exige-se aprovação pesada: <strong>2/3 dos membros</strong> da Câmara em duas votações com interstício de 10 dias.</li>
+                         </ul>
+                         <h4 class="text-xl font-bold mt-6 mb-3 text-indigo-900 border-l-4 border-indigo-500 pl-3">Estatuto dos Servidores (Lei 384/97)</h4>
+                         <p class="mb-3 text-slate-700"><strong>Posse e Exercício:</strong> Aprovado no concurso de Orientador, você é nomeado. Tem <strong>30 dias</strong> para tomar Posse. E depois, mais <strong>30 dias</strong> para entrar em Exercício. <br>
+                         <strong>Abandono de Cargo:</strong> Faltar por mais de <strong>20 dias consecutivos</strong> sem justificativa acarreta processo disciplinar por abandono de cargo, cuja pena é a Demissão.</p>`,
+                perolas: "Cuidado: A exoneração não é punição (ocorre a pedido do servidor ou fim de cargo comissionado). A DEMISSÃO é a punição por infração grave do estatuto (como abandono de cargo).",
+                questoes: [
+                    // FÁCIL 1
+                    Q("De acordo com a Lei Orgânica de Equador/RN, são Poderes do Município, independentes e harmônicos entre si:", ["O Executivo e o Judiciário.", "O Legislativo e o Judiciário.", "O Executivo e o Legislativo.", "A Prefeitura, o Fórum e a Câmara."], 2, 'Fácil', "Não há Judiciário na esfera do município, apenas Executivo (Prefeito) e Legislativo (Vereadores)."),
+                    // MÉDIA 1
+                    Q("O Estatuto dos Servidores de Equador (Lei 384/97) define que a investidura em cargo público ocorre formalmente com a:", ["Aprovação no concurso.", "Nomeação no diário oficial.", "Posse.", "Entrada em exercício."], 2, 'Média', "A posse é o ato de assinar o termo de compromisso, marcando a investidura legal no cargo."),
+                    // DIFÍCIL 1
+                    Q("De acordo com o Estatuto dos Servidores de Equador, configurar-se-á Abandono de Cargo quando o servidor ausentar-se do serviço, sem causa justificada, por um período de:", ["Mais de 10 dias seguidos.", "Mais de 15 dias seguidos.", "Mais de 20 dias continuados.", "Mais de 30 dias interpolados no ano."], 2, 'Difícil', "No estatuto de Equador, o limite da falta injustificada contínua para configurar abandono é rigoroso: ultrapassar 20 dias (Art. 196, § 2º)."),
+                    // FÁCIL 2
+                    Q("A Lei Orgânica de Equador prevê que, em caso de impedimento do Prefeito e do Vice-Prefeito, assumirá a chefia da Prefeitura municipal o:", ["Juiz de Direito da Comarca.", "Presidente da Câmara de Vereadores.", "Secretário Municipal de Administração.", "Delegado de Polícia local."], 1, 'Fácil', "Na linha de sucessão, o chefe do Legislativo assume o Executivo na queda dos titulares."),
+                    // MÉDIA 2
+                    Q("Um projeto de lei é aprovado pela Câmara de Equador e enviado ao Prefeito. Conforme a Lei Orgânica, o Prefeito tem qual prazo para analisar e aplicar seu VETO caso discorde do texto?", ["5 dias corridos.", "10 dias úteis.", "15 dias úteis.", "30 dias úteis."], 2, 'Média', "O prefeito tem 15 dias úteis para sanção ou veto. O silêncio após esse prazo sanciona a lei."),
+                    // DIFÍCIL 2
+                    Q("Servidor de Equador foi demitido injustamente. Ele consegue provar sua inocência no judiciário e a demissão é invalidada. Segundo o Estatuto, o ato de reingresso desse servidor ao serviço público, com ressarcimento dos prejuízos do afastamento, chama-se:", ["Reversão.", "Readaptação.", "Reintegração.", "Recondução."], 2, 'Difícil', "A Reintegração é a volta heroica do injustiçado, recebendo todos os atrasados do período em que ficou fora."),
+                    // FÁCIL 3
+                    Q("Conforme o Estatuto, após sua Nomeação no Diário Oficial para o cargo de Orientador Social, você tem um prazo padrão para assinar o termo e tomar Posse. Esse prazo inicial é de:", ["10 dias.", "15 dias.", "30 dias.", "60 dias."], 2, 'Fácil', "A posse deve ocorrer no prazo de 30 dias a partir do ato de nomeação."),
+                    // MÉDIA 3
+                    Q("Qual o quorum (votação) necessário exigido pela Lei Orgânica de Equador para a aprovação de uma Emenda à própria Lei Orgânica (uma mudança nas leis basilares da cidade)?", ["Maioria simples dos presentes.", "Metade mais um.", "Dois terços (2/3) dos membros da Câmara.", "Unanimidade dos vereadores."], 2, 'Média', "Por ser a 'constituição' local, alterar a Lei Orgânica requer um consenso alto: votação qualificada de 2/3 da Câmara."),
+                    // DIFÍCIL 3
+                    Q("No Estatuto de Equador, o instituto da READAPTAÇÃO aplica-se quando:", ["O servidor aposentado retorna à ativa.", "Acontece a extinção do cargo, colocando o servidor em disponibilidade.", "Há modificações no estado de saúde (físico/psíquico) do servidor que limitem sua capacidade, transferindo-o para cargo mais compatível.", "O servidor comissionado pede demissão."], 2, 'Difícil', "O servidor que adoece e não pode mais fazer o trabalho original é readaptado para outra função respeitando suas novas limitações de saúde."),
+                    // FÁCIL 4
+                    Q("Na organização do Município de Equador, a função de legislar, fiscalizar e julgar as contas do Prefeito é atribuição precípua do Poder:", ["Executivo.", "Ministério Público.", "Legislativo (Câmara Municipal).", "Tribunal de Justiça."], 2, 'Fácil', "É a câmara que elabora leis e fiscaliza as contas do Executivo com auxílio do Tribunal de Contas."),
+                    // MÉDIA 4
+                    Q("Segundo as penalidades do Estatuto dos Servidores de Equador (Lei 384/97), a cassação da aposentadoria poderá ocorrer se ficar provado que o servidor, quando estava na ativa:", ["Chegou atrasado 3 vezes na mesma semana.", "Praticou falta grave punível com pena de suspensão ou demissão.", "Exerceu mandato de vereador concomitantemente com o cargo.", "Pediu férias prêmio não concedidas."], 1, 'Média', "Quem cometeu infração grave na ativa e correu para se aposentar antes do processo, sofre a cassação da aposentadoria."),
+                    // DIFÍCIL 4
+                    Q("Conforme o Título IX do Estatuto, a jornada de trabalho normal máxima dos servidores de Equador, ressalvadas leis específicas de carreiras, não excederá a:", ["6 horas diárias e 30 semanais.", "8 horas diárias e 40 semanais.", "8 horas diárias e 44 semanais.", "10 horas diárias e 48 semanais."], 1, 'Difícil', "O estatuto local em seu Art. 232 fixou o teto de 8 horas diárias e 40 semanais de trabalho."),
+                    // FÁCIL 5
+                    Q("Se um ocupante de cargo estritamente em comissão (livre nomeação e exoneração) desagradar o prefeito, ele sofre qual ato de rompimento de vínculo?", ["Demissão a bem do serviço público.", "Suspensão preventiva.", "Exoneração 'ex-oficio'.", "Cassação de mandato."], 2, 'Fácil', "Cargos de confiança são exonerados livremente (ad nutum), sem configurar pena disciplinar."),
+                    // MÉDIA 5
+                    Q("Nos termos da Lei Orgânica, o Prefeito de Equador/RN só precisa solicitar autorização prévia da Câmara Municipal caso vá se ausentar do município ou do estado por um prazo superior a:", ["5 dias.", "10 dias.", "15 dias.", "30 dias."], 2, 'Média', "Viagens longas (mais de 15 dias) requerem aprovação do Legislativo, sob pena de perda do mandato."),
+                    // DIFÍCIL 5
+                    Q("Um servidor estável no cargo de motorista em Equador vê seu cargo ser extinto por lei municipal. O que lhe ocorre de acordo com o Estatuto?", ["Ficará desempregado e exonerado sem direitos.", "Ficará em disponibilidade remunerada com salário proporcional, aguardando aproveitamento em outro cargo.", "Receberá o salário integral em casa para o resto da vida.", "Será transferido forçosamente para cargo em comissão de chefe."], 1, 'Difícil', "A estabilidade protege o vínculo. Se o cargo some, o servidor não é demitido, ele entra em 'disponibilidade' ganhando proporcionalmente até ser encaixado (aproveitado) noutra função.")
+                ]
+            },
+
+            {
+                id: 6, dia: "Sábado", disciplina: "Específicos Avançados", tema: "Metodologias e A Prática do Orientador", progresso: 75,
+                teoria: `<p class="drop-cap">A</p><p class="text-lg leading-relaxed mb-4">essência do cargo de Orientador Social é a prática socioeducativa em grupo. A prova cobrará o discernimento ético das suas ações no CRAS e SCFV de Equador/RN.</p>
+                         <h4 class="text-xl font-bold mt-6 mb-3 text-indigo-900 border-l-4 border-indigo-500 pl-3">Limites de Atuação Profissional</h4>
+                         <ul class="list-disc pl-6 space-y-2 mb-6">
+                            <li>O Orientador <strong>Média Conflitos</strong>. Ele facilita oficinas, organiza dinâmicas culturais, arte, esporte e lazer no SCFV.</li>
+                            <li>O Orientador <strong>NÃO FAZ TERAPIA</strong>. Quem cuida de tratamentos psicológicos ou clínicos no CRAS é a equipe técnica de referência (Psicólogo/Assistente Social).</li>
+                            <li>O Orientador <strong>NÃO PUNE</strong>. A lógica não é castigar menores, mas estimular o diálogo, a reflexão e o protagonismo juvenil.</li>
+                         </ul>
+                         <h4 class="text-xl font-bold mt-6 mb-3 text-indigo-900 border-l-4 border-indigo-500 pl-3">O Sigilo e o CadÚnico</h4>
+                         <p class="mb-3 text-slate-700">A escuta das famílias revela dramas íntimos. O sigilo é dever moral. Porém, <strong>em caso de suspeita de crime ou violação grave (abuso/violência contra o vulnerável)</strong>, o sigilo recua para que a rede de proteção (Conselho Tutelar / CREAS / Polícia) seja acionada através da equipe técnica da unidade.</p>`,
+                perolas: "O Cadastro Único (CadÚnico) é a porta de entrada para os programas sociais (Bolsa Família, BPC). O foco do CRAS é a família em sua integralidade, não o indivíduo isolado (Matricialidade Sociofamiliar).",
+                questoes: [
+                    // FÁCIL 1
+                    Q("Em reuniões e oficinas do Serviço de Convivência (SCFV) com grupos de idosos, o foco principal do Orientador Social deve ser:", ["Incentivá-los a realizar esportes de altíssimo impacto para melhorar os ossos.", "Isolá-los dos mais jovens para evitar conflitos de gerações.", "Promover o envelhecimento ativo, o resgate das memórias, a valorização das suas histórias de vida e a convivência intergeracional.", "Ensinar disciplinas escolares visando a aprovação no ENEM."], 2, 'Fácil', "O envelhecimento ativo, a dignidade, memória e saúde social da pessoa idosa são os eixos das atividades grupais no CRAS."),
+                    // MÉDIA 1
+                    Q("Na prática do CRAS, qual a função central do Cadastro Único (CadÚnico)?", ["Funcionar como lista de devedores de impostos da prefeitura.", "Identificar e caracterizar as famílias de baixa renda no Brasil, servindo de base para a seleção em diversos programas sociais.", "Ser o sistema exclusivo de matrícula nas escolas estaduais.", "Rastrear antecedentes criminais de adolescentes no município."], 1, 'Média', "O CadÚnico é o grande banco de dados da pobreza no Brasil, cruzando dados para o Bolsa Família e benefícios eventuais."),
+                    // DIFÍCIL 1
+                    Q("Durante uma oficina no CRAS de Equador, uma usuária do grupo revela ao Orientador Social, de forma confidencial, que sua filha sofre abusos recorrentes no ambiente doméstico. O dever ético e prático do Orientador é:", ["Manter o sigilo absoluto a qualquer custo e não interferir nos problemas familiares privados.", "Dar conselhos religiosos para a usuária orar e resolver a crise em casa.", "Repassar imediatamente a informação à equipe de referência técnica do CRAS (Assistente Social/Psicólogo) para o desencadeamento das ações protetivas e acionamento do CREAS/Conselho Tutelar.", "Ir à casa do agressor dar-lhe uma advertência oral severa em nome da prefeitura."], 2, 'Difícil', "O sigilo profissional cai em caso de crime/violação de direitos do vulnerável. O Orientador articula com os técnicos superiores para que a intervenção do Estado ocorra."),
+                    // FÁCIL 2
+                    Q("No trabalho com adolescentes em conflito no território, a postura do Orientador Social deve fugir de práticas assistencialistas ou repressivas, buscando estimular o(a):", ["Conformismo e passividade.", "Isolamento da sociedade.", "Protagonismo e emancipação social cidadã.", "Castigo físico e trabalho forçado."], 2, 'Fácil', "Protagonismo juvenil e cidadania emancipada são as metas do SUAS."),
+                    // MÉDIA 2
+                    Q("É atribuição técnica CORRETA do cargo de Orientador Social:", ["Aprovar e liberar os pagamentos mensais do programa Bolsa Família para a população de Equador.", "Planejar e mediar atividades lúdicas, esportivas, culturais e de lazer nos grupos do SCFV.", "Atuar como psicoterapeuta de crianças com depressão no CRAS.", "Fiscalizar e fechar comércios irregulares no bairro."], 1, 'Média', "A mediação de oficinas de convivência (lúdicas, socioculturais) é a marca do Orientador. As demais são de gestão, psicologia e fiscalização sanitária/posturas."),
+                    // DIFÍCIL 2
+                    Q("O trabalho social com famílias na Política de Assistência Social pauta-se no conceito de 'Matricialidade Sociofamiliar'. Isso significa que:", ["A família extensa (tios, avós) não é reconhecida como núcleo protetor no SUAS.", "A mãe biológica é a única responsável legal pelo cuidado na assistência social.", "A família, em suas diversas formas de organização, é compreendida como o núcleo social básico de acolhimento e centralidade da política.", "O Estado afasta a família da assistência e foca apenas no indivíduo de forma isolada em abrigos."], 2, 'Difícil', "A centralidade das políticas do SUAS não olha apenas para o Joãozinho doente, olha para a estrutura da família de Joãozinho, buscando empoderar e amparar o lar inteiro (Matricialidade)."),
+                    // FÁCIL 3
+                    Q("Para conhecer a realidade do território de Equador/RN e alcançar famílias extremamente vulneráveis que não vão ao CRAS sozinhas, o Orientador Social realiza rotineiramente a chamada:", ["Ronda Ostensiva.", "Busca Ativa.", "Apreensão Preventiva.", "Fiscalização Tributária."], 1, 'Fácil', "Ir ao encontro do vulnerável que está invisível na comunidade chama-se Busca Ativa (Visitas Domiciliares preventivas)."),
+                    // MÉDIA 3
+                    Q("O uso do Lúdico (brincadeiras, rodas, jogos) no SCFV com crianças de 6 a 12 anos possui qual objetivo metodológico?", ["Apenas passar o tempo enquanto os pais estão trabalhando.", "Funcionar como linguagem primária de comunicação da criança, facilitando a socialização, o fortalecimento de vínculos e a expressão de sentimentos.", "Servir de castigo, forçando a participação quando as crianças se comportam mal.", "Substituir a aula de matemática e alfabetização formal do Estado."], 1, 'Média', "O lúdico tem papel pedagógico profundo. Brincar é a forma de a criança se relacionar com o mundo e expressar traumas."),
+                    // DIFÍCIL 3
+                    Q("Um dos focos de mediação do Orientador Social no SUAS é trabalhar a prevenção de preconceitos. Caso ocorra um forte caso de discriminação LGBTfóbica ou Racismo dentro do grupo do SCFV, o Orientador deve:", ["Omitir-se, afinal, é direito da liberdade de expressão dos participantes fazerem piadas e insultos no grupo.", "Punir o jovem agressor batendo-lhe na frente dos demais.", "Rir da brincadeira para quebrar o gelo e não perder a amizade dos adolescentes do bairro.", "Intervir garantindo o respeito absoluto à diversidade, realizar mediação do conflito pautada na cultura da paz e repassar o caso à equipe de referência se persistir."], 3, 'Difícil', "A ética do SUAS não admite intolerância ou preconceitos e o Orientador é o mediador prático contra isso."),
+                    // FÁCIL 4
+                    Q("Ao receber um usuário em situação de miséria pedindo um benefício financeiro ou cesta básica, a postura ética do profissional no CRAS é baseada na compreensão de que a assistência é:", ["Uma caridade pessoal do Prefeito.", "Um favor do Estado para com os oprimidos.", "Um direito cidadão garantido constitucionalmente que exige atendimento respeitoso e digno.", "Um empréstimo que deve ser pago com trabalho gratuito."], 2, 'Fácil', "Assistência não é favor nem esmola. É política pública de direito."),
+                    // MÉ বিধ 4
+                    Q("O Serviço de Convivência e Fortalecimento de Vínculos (SCFV) é ofertado para:", ["Apenas para jovens menores infratores encaminhados pelo Juiz.", "Apenas para idosos acamados.", "Crianças, adolescentes, jovens, adultos e idosos, organizados em grupos de acordo com seus ciclos de vida.", "Apenas mulheres gestantes do Cadastro Único."], 2, 'Média', "O SCFV é um programa Intergeracional (atende e mistura de forma organizada as várias faixas etárias)."),
+                    // DIFÍCIL 4
+                    Q("A equipe técnica de referência de um CRAS (que supervisiona o trabalho do Orientador Social) deve ter, minimamente, em sua formação técnica de nível superior:", ["1 Assistente Social e 1 Psicólogo.", "2 Médicos e 1 Enfermeiro.", "1 Juiz de Direito e 1 Policial.", "2 Advogados do município."], 0, 'Difícil', "A norma operacional básica de recursos humanos (NOB-RH/SUAS) fixa a dupla psicossocial (Serviço Social + Psicologia) como pilar do CRAS."),
+                    // FÁCIL 5
+                    Q("Na organização da sociedade, o SUAS preconiza a articulação com a rede socioassistencial. Isso quer dizer que o Orientador Social de Equador/RN:", ["Deve trabalhar completamente isolado, sem falar com professores e médicos.", "Deve entender que a escola, o posto de saúde, a polícia e o conselho tutelar fazem parte de uma grande 'rede' que colabora entre si para amparar o vulnerável.", "Deve competir com a saúde e a educação para ver quem resolve o problema sozinho.", "Deve proibir a família de ir ao posto de saúde do município."], 1, 'Fácil', "O trabalho em rede (onde o CRAS dialoga com a escola que dialoga com a UBS) é vital para o cuidado total do cidadão."),
+                    // MÉDIA 5
+                    Q("O acolhimento das famílias no CRAS deve proporcionar um ambiente:", ["Frio, autoritário, baseado em punições para quem é irresponsável com o trabalho.", "Sigiloso e hostil, para forçá-los a arrumar emprego sozinhos.", "Empático, livre de estigmas, com escuta qualificada que reconheça as potências e dificuldades do grupo.", "Doutrinador, exigindo participação em cultos ou missas obrigatórias no final do encontro."], 2, 'Média', "Empatia e escuta sem prejulgamentos resumem a técnica da entrevista no SUAS."),
+                    // DIFÍCIL 5
+                    Q("Um jovem do SCFV de Equador sofreu uma ameaça de morte por membros de gangues e a convivência no bairro tornou-se inviável e perigosa para a vida da família inteira, exigindo inserção do adolescente em programa estadual de proteção sob sigilo. Qual Proteção Social foi ativada neste caso extremo?", ["Proteção Básica de Convivência.", "Proteção Previdenciária de Auxílio Doença.", "Proteção Social Especial de Alta Complexidade.", "Programa de Transferência de Renda Imediata."], 2, 'Difícil', "Quando o risco à vida exige a retirada da pessoa do seu meio familiar e comunitário normal e a sua ocultação/proteção estatal (Abrigo sigiloso PPCAAM), atinge-se o grau de Alta Complexidade da assistência.")
+                ]
+            },
+
+            {
+                id: 7, dia: "Domingo", disciplina: "Super Revisão", tema: "Bateria Geral de Alta Intensidade", progresso: 87,
+                teoria: `<div class="space-y-6">
+                            <div class="bg-indigo-900 text-white p-8 rounded-3xl shadow-xl">
+                                <h3 class="text-3xl font-black mb-4 flex items-center gap-3"><i class="ph-fill ph-rocket-launch text-emerald-400 text-4xl"></i> Aulão de Fixação</h3>
+                                <p class="text-indigo-100 text-lg">Esta revisão contém 35 questões rápidas misturando Leis Municipais, SUAS, ECA e Português. Ideal para afiar a memória e velocidade antes do Simulado Final.</p>
+                            </div>
+                         </div>`,
+                perolas: "",
+                questoes: [
+                    // Revisão Rápida 35 Qs
+                    Q("O equipamento público porta de entrada do SUAS é o:", ["CREAS", "CRAS", "CAPS", "UBS"], 1, 'Fácil', "O CRAS previne e acolhe primeiro nas bases comunitárias."),
+                    Q("Qual o prazo do Prefeito de Equador para vetar um projeto de Lei?", ["15 dias corridos.", "10 dias úteis.", "15 dias úteis.", "30 dias."], 2, 'Fácil', "15 dias úteis (LOM de Equador)."),
+                    Q("Idoso de 81 anos e um de 65 anos chegam ao CRAS. Quem atende primeiro?", ["O de 65.", "O de 81 (Prioridade Especial).", "Ordem de chegada rigorosa.", "O que for mais rico."], 1, 'Média', "Maiores de 80 tem super prioridade (Estatuto da Pessoa Idosa)."),
+                    Q("Crase é proibida antes de:", ["Palavras femininas.", "Pronomes indefinidos e verbos.", "Horas exatas em convites.", "Locuções adverbiais femininas."], 1, 'Média', "Antes de 'todos', 'alguém', 'chegar' não se usa crase."),
+                    Q("Desfazer um erro acidental no Word:", ["Ctrl+C", "Ctrl+Z", "F5", "Alt+Tab"], 1, 'Fácil', "O Z desfaz o erro."),
+                    Q("Equador emancipou de qual cidade da região?", ["Parelhas.", "Caicó.", "Currais Novos.", "Acari."], 0, 'Fácil', "Desmembrou-se de Parelhas/RN em 1953."),
+                    Q("Para o ECA, criança é quem tem idade de:", ["Até 12 incompletos.", "Até 14.", "Até 10 completos.", "Até 12 completos."], 0, 'Fácil', "11 anos, 11 meses. Aos 12 vira adolescente."),
+                    Q("Trabalho aos 14 anos de idade no Brasil só é permitido se:", ["For noturno.", "For insalubre para ganhar insalubridade.", "Na condição restrita de aprendiz.", "No corte de cana pesado com os pais."], 2, 'Média', "Aprendizagem é a única porta legal do trabalho aos 14."),
+                    Q("O SCFV ocorre prioritariamente no equipamento chamado:", ["CREAS.", "Abrigo Institucional.", "Hospital Regional.", "CRAS."], 3, 'Difícil', "Trabalho de fortalecimento de vínculos ocorre na Proteção Básica = CRAS."),
+                    Q("O que significa Polissemia?", ["Palavras de sentidos completamente opostos.", "Palavra que adquire vários sentidos de acordo com o contexto.", "Palavras que se escrevem igual mas soam diferente.", "Erro de gramática fatal na redação."], 1, 'Fácil', "Manga (fruta) / Manga (camisa). Um significante, vários significados."),
+                    Q("Extensão do formato de texto Word moderno e Planilhas Excel:", [".xls / .doc", ".pptx / .txt", ".docx / .xlsx", ".pdf / .csv"], 2, 'Fácil', "As versões atuais ganharam o 'X' no final."),
+                    Q("O padroeiro da cidade de Equador é:", ["São José.", "São Sebastião.", "Santo Antônio.", "Nossa Sra. da Conceição."], 1, 'Fácil', "São Sebastião é o festejo maior de Equador."),
+                    Q("A sílaba tônica em uma palavra PROPAROXÍTONA fica na:", ["Última sílaba sempre.", "Penúltima sílaba.", "Antepenúltima sílaba.", "Na vogal isolada."], 2, 'Média', "Como em ÁR-vo-re. TODAS são acentuadas."),
+                    Q("O golpe de Phishing na internet consiste em:", ["Sequestrar o computador.", "Pescar vítimas com sites falsos clonados de bancos/instituições para roubar senhas.", "Acelerar a CPU da máquina ilegalmente.", "Deletar a Lixeira do Windows."], 1, 'Difícil', "A engenharia social engana o olhar do usuário desatento."),
+                    Q("A mineração forte da economia de Equador extrai principalmente:", ["Ferro e Cobre.", "Caulim, Feldspato e Tantalita.", "Petróleo.", "Ouro e Prata em veios fundos."], 1, 'Fácil', "Os pegmatitos de caulim alimentam fábricas químicas e de papel/cerâmica fora do estado."),
+                    Q("O Orientador Social ao ver brigas de adolescentes no grupo deve focar em:", ["Castigo físico corretivo com os pais.", "Doutrinar a medicação psiquiátrica em dose alta.", "Emancipação, reflexão pacífica e cidadania (Mediação).", "Ligar a TV e ir embora ignorando."], 2, 'Média', "Educação social gera cidadania na gestão do conflito."),
+                    Q("O verbo HAVER com o sentido de existir no plural:", ["É correto dizer 'Houveram'.", "Fica travado no singular 'Houve'.", "Vira 'Faz' e deve flexionar.", "É de conjugação facultativa pelo escritor."], 1, 'Média', "Impessoal = Singular."),
+                    Q("Para esconder os e-mails dos contatos num envio em massa, usa-se o campo:", ["Para.", "Anexo (Clipe).", "Cco (Cópia Carbono Oculta).", "Lixo eletrônico direto."], 2, 'Fácil', "Esconde destinatários garantindo a blindagem."),
+                    Q("Conselho Tutelar é composto por Juízes do Fórum?", ["Sim, formados em direito.", "Não, é autônomo, não jurisdicional, com membros eleitos pelo povo.", "Sim, e aplicam prisões preventivas no ato.", "Não, é formado por Policiais Civis folgados."], 1, 'Difícil', "São pessoas comuns da sociedade civil votadas nas urnas a cada 4 anos."),
+                    Q("A Proteção Especial (no CREAS) entra em campo somente quando:", ["A família quer se inscrever no Bolsa Família do ano.", "Os direitos da pessoa já foram rompidos e violados severamente (violência).", "O prefeito decide dar esmolas no centro.", "Acontecem apenas surtos de doenças endêmicas no território rural."], 1, 'Média', "CREAS = Violação (Intervenção). CRAS = Risco (Prevenção)."),
+                    Q("O BPC (Benefício de Prestação Continuada) paga a idosos miseráveis o valor de:", ["Meio salário mínimo vitalício anual.", "Uma cesta básica de R$ 300,00 reais em ticket.", "1 salário mínimo fixo pago pelo INSS.", "Dependentes do estado na previdência rural ganham dois salários."], 2, 'Fácil', "É a garantia cravada da LOAS (1 Salário Mínimo)."),
+                    Q("A tipologia de manuais, leis e receitas que usam verbos ordenando ações:", ["Narração densa.", "Descrição psicológica.", "Injuntiva.", "Poética reflexiva."], 2, 'Média', "Usa verbos no imperativo (faça, misture, acesse, corra)."),
+                    Q("O que um Ransomware moderno causa numa Prefeitura?", ["Muda o papel de parede e toca músicas velhas do sistema MS-DOS na tela.", "Sequestra os arquivos cruciais da gestão com criptografia de ponta militar, paralisando os postos, e cobra resgate financeiro milionário.", "Destrói a placa mãe pegando fogo no gabinete do setor de tributos em poucas horas.", "Gera boletos em dobro dos contribuintes de forma inocente para testes visuais rápidos."], 1, 'Difícil', "Vírus Sequestrador. Extrema periculosidade atual."),
+                    Q("O projeto grandioso de turismo geológico reconhecido pela UNESCO do qual Equador faz parte e abriga geossítios chama-se:", ["Furna Feia Central.", "Geoparque Seridó.", "Atol das Rocas seco no litoral raso.", "Parque do Cariri de Pedras grandes."], 1, 'Fácil', "Geoparque Seridó UNESCO."),
+                    Q("Quantos Vereadores formam a Câmara de Equador pela Lei Orgânica?", ["5 vereadores nas cadeiras baixas.", "7 vereadores plenos em votação.", "9 vereadores no plenário eleito.", "11 vereadores por lei antiga regional."], 2, 'Média', "9 cadeiras compõem o legislativo local."),
+                    Q("Segundo a LOM, para alterar a Lei Orgânica municipal de Equador, o Prefeito ou a Câmara precisam de qual apoio?", ["Metade dos presentes em urna fechada limpa sem auditores.", "Voto qualificado e altíssimo de 2/3 dos Vereadores da casa legislativa.", "Voto da população simples sem lei escrita no centro da cidade em domingo solar.", "Decisão unânime completa da câmara e fórum federal."], 1, 'Difícil', "Mudar a LOM requer o suor político de 2/3 da câmara."),
+                    Q("'Embora a estrada fosse ruim, a kombi do CRAS chegou ao sítio.' Indica:", ["Causa da chegada serena.", "Concessão (um obstáculo que não impediu o ato principal forte).", "Adição de ideias novas de trânsito em estrada livre", "Tempo na chegada ao sítio verde escuro à noite da tarde"], 1, 'Média', "Embora = Oposição que cede = Concessão."),
+                    Q("A Lixeira do Windows tem qual serventia útil no dia a dia da repartição do setor?", ["Apaga tudo direto sem piedade alguma e sem perguntas no sistema", "Armazena arquivos temporariamente após apagar do HD, permitindo o famoso restaurar na hora do desespero cego", "É enfeite inútil de mesa visual que limpa vírus antigos", "Guarda vírus suspeitos em zona neutra segura de teste limpo rústico na RAM"], 1, 'Fácil', "Rede de segurança fundamental."),
+                    Q("Qual ciclo o SCFV pode focar nos atendimentos do galpão de bairro e na praça da área?", ["Apenas intergeracional isolado sem crianças para não ter barulho diário.", "Exclusivo apenas para crianças órfãs da favela e bairros pobres do centro no sul.", "Só idosos do asilo público acamados com soro na veia com curativos graves.", "Todas as idades desde a infância à velhice, com grupos focados em cada ciclo da vida."], 3, 'Fácil', "Todos os ciclos de vida são acolhidos em suas especificidades."),
+                    Q("Se o Prefeito vai viajar para fora da Paraíba/RN por mais de 15 dias corridos seguidos fora do cargo o que ele faz da vida?", ["Nada, só viaja de avião livre na paz", "Avisa a família do vice no café matinal cedo", "Pede autorização para se ausentar ao Poder Legislativo (Câmara Municipal) da cidade onde atua sob pena formal", "Suspende a prefeitura e fecha o caixa cego fechado trancado no cofre do prédio"], 2, 'Média', "Viagem longa exige autorização do Legislativo."),
+                    Q("Uso do Lúdico infantil na roda com crianças vítimas do trauma no SUAS é útil em que?", ["Para cansar as pernas da criança brava punindo ela", "É ferramenta central que brincando permite socialização sadia, fala, escuta lúdica e confiança no mundo humano.", "Opcional inútil moderno proibido pela lei e ministério público antigo duro de punição", "Perigoso se a criança machucar a perna correndo na brita do sol quente"], 1, 'Média', "O brincar educa, aproxima, cria o elo."),
+                    Q("Qual destas perdeu o acento gráfico recente na lei?", ["Saúde do poço.", "Página da ata de lei e ordem.", "Ideia brilhante criativa do projeto.", "Lápis de cor na sala azul viva da mesa forte."], 2, 'Média', "Paroxítona com ditongo EI perdeu o chapéu."),
+                    Q("Para mudar o nome do relatório na pasta, selecione o arquivo do disco local clicando uma vez forte com botão esquerdo do mouse branco velho e pressione qual atalho salvador prático rápido?", ["F1 no topo do teclado negro sujo de pó leve do vento.", "F2 do teclado na ponta de plástico suja de tinta e grafite.", "Aperte DELETE do teclado negro sem querer querendo.", "Pressione Enter com raiva da pressa atrasada do chefe alto e grosso do setor"], 1, 'Difícil', "O atalho F2 Edita o nome do arquivo selecionado."),
+                    Q("O Orientador faz sessão terapêutica clínica para trauma da criança e adolescente no consultório do CRAS regional local do interior na cidade seca do sertão rochoso?", ["Sim com cadernos e testes rorschach visuais brancos negros nas manchas simétricas complexas difíceis mentais.", "Não, quem faz o trabalho e atendimento psicossocial terapêutico nas horas de escuta clínica restrita profunda privada e complexa do trauma é o psicólogo exclusivo superior ético analítico e do assistente social do PAIF", "Apenas dá os remédios e sai das salas em paz limpo sorrindo e orando alto com bíblias na mão firme e limpa do suor do sol", "Fica em silêncio olhando o teto nas salas frias de vento fraco com os jovens calados sem voz tristes parados"], 1, 'Fácil', "Orientador não tem papel clínico nem de laudos médicos sociais ou sentenças e decisões."),
+                    Q("Atribuir a ideia e o conceito gramatical complexo abstrato dos adjetivos à posição do sujeito principal do foco no topo da frase que se distanciou da cabeça lógica no texto se chama a função de:", ["Objeto direto livre simples prático no texto.", "Aposto explicativo forte gigante extenso prolixo e denso nas letras soltas com aspas ou vírgulas e parênteses", "Predicativo (do sujeito) distante nas linhas que cruza e dá estado à coisa longe do ato verbal que age forte.", "Adjunto adverbial rápido de lugar vazio longo de rua longa"], 2, 'Difícil', "Ex: Ele chegou, após longa marcha, CANSADO.")
+                ]
+            },
+
+            {
+                id: 8, dia: "Domingo", disciplina: "Simulado Master", tema: "Aferição Geral Padrão FUNCERN (50 Questões)", progresso: 100,
+                teoria: `<div class="bg-slate-900 rounded-3xl p-10 text-center text-white border border-slate-700 shadow-2xl relative overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-br from-indigo-900/50 to-emerald-900/50 mix-blend-overlay"></div>
+                            <div class="relative z-10">
+                                <i class="ph-duotone ph-target text-7xl text-emerald-400 mb-6 inline-block animate-pulse"></i>
+                                <h3 class="text-4xl md:text-5xl font-black mb-4 tracking-tight">Simulado Final (50 Questões)</h3>
+                                <p class="text-indigo-200 text-xl font-medium max-w-2xl mx-auto">Esta é a simulação final nos moldes do que a FUNCERN exigirá de você. Proporção calculada: Português, Info, Legislação Local e Leis Sociais do CRAS.</p>
+                            </div>
+                         </div>`,
+                perolas: "",
+                questoes: [
+                    // PORTUGUÊS (15 Qs)
+                    Q("O tipo de texto presente em editais de licitação, manuais de aparelhos e receitas culinárias é predominantemente o:", ["Narrativo.", "Descritivo.", "Dissertativo-Argumentativo.", "Injuntivo."], 3, 'Fácil', "A injunção instrui e demanda ações (uso de imperativos)."),
+                    Q("Assinale a alternativa cuja palavra está grafada INCORRETAMENTE, desrespeitando as regras de ortografia oficial:", ["Exceção.", "Sugeira.", "Privilégio.", "Pousada."], 1, 'Fácil', "A palavra se grafa com 'J': SUJEIRA (derivada de sujo)."),
+                    Q("A ocorrência da CRASE é OBRIGATÓRIA na alternativa:", ["O prefeito falou a todos na câmara.", "O servidor voltou a pé para casa.", "Compramos os materiais do CRAS a prazo.", "Amanhã iremos à feira central com as crianças."], 3, 'Fácil', "Feira é palavra feminina. Quem vai, vai a. (A + a feira = à feira). Antes de 'todos' (pronome), 'pé' e 'prazo' (masculinos) a crase é proibida."),
+                    Q("Qual das palavras abaixo NÃO é uma proparoxítona?", ["Última.", "Mecânico.", "Polícia.", "Dígrafo."], 2, 'Média', "Po-LÍ-cia é uma paroxítona terminada em ditongo (ou falsa proparoxítona). Última, mecânico e dígrafo têm a antepenúltima sílaba tônica real."),
+                    Q("Em qual frase ocorre erro de concordância verbal com o verbo HAVER?", ["Faz dez anos que ele mora em Equador.", "Haviam muitos problemas com o telhado do CREAS.", "Vende-se apostilas e canetas na praça.", "Vão existir novas vagas de concurso."], 1, 'Difícil', "O verbo HAVER (sentido de existir) e FAZER (tempo decorrido) são impessoais. O correto é: HOUVE muitos problemas / HAVIA muitos problemas. O 'Vendem-se apostilas' (Plural) também estaria certo em norma dura apassivadora, mas a da alternativa C usou singular, o que está errado. HAVIAM, no entanto, é o erro clássico mais cobrado que mata a questão B. C também tem erro sutil. Funcern anularia? A FUNCERN foca no Haviam. Vamos focar na B como Erro Craço."),
+                    Q("O antônimo de EFÊMERO é:", ["Breve.", "Rápido.", "Permanente.", "Frágil."], 2, 'Média', "Efêmero é passageiro. Antônimo é duradouro, permanente."),
+                    Q("Há separação silábica incorreta na palavra:", ["Car-ro-ça.", "Ex-ce-ção.", "A-rra-nhar.", "Moin-ho."], 2, 'Média', "O 'RR' deve ficar em sílabas separadas (Ar-ra-nhar). A alternativa 'Moin-ho' (Moi-nho) também está mal separada, mas RR/SS é regra básica. Ambas dariam erro. Erro crasso clássico é não separar RR/SS. Foco: A-rra-nhar é falso."),
+                    Q("Qual a classificação morfológica da palavra destacada em: Ele chegou MUITO tarde na Prefeitura?", ["Substantivo.", "Adjetivo.", "Pronome Relativo.", "Advérbio de Intensidade."], 3, 'Média', "Modifica o advérbio 'tarde' indicando a sua força/intensidade."),
+                    Q("Na frase 'PORTANTO, devemos aprovar a lei', a conjunção exprime:", ["Ideia de causa do problema.", "Ideia de oposição a um ato.", "Ideia de conclusão lógica e fechamento de raciocínio.", "Ideia de adição enumerativa."], 2, 'Fácil', "Portanto, Logo, Assim, Então = Conclusivas."),
+                    Q("O fenômeno da POLISSEMIA é caracterizado por:", ["Palavras que possuem som igual, mas se escrevem diferente (Cessão, Sessão).", "Uma palavra ter inúmeros e distintos significados dependo do contexto (Manga de blusa, Manga fruta).", "Oposição de ideias extremas no texto base (Fogo e Água).", "Erro grosseiro na construção da frase falada do narrador solto."], 1, 'Fácil', "Poli = Múltiplos. Semia = Sentidos."),
+                    Q("Qual palavra apresenta um hiato (vogais que ficam juntas na palavra, mas se separam na divisão de sílabas)?", ["Paixão.", "Saúde.", "Causa.", "Ameixa."], 1, 'Média', "Sa-ú-de. As vogais 'a' e 'u' pertencem a sílabas diferentes."),
+                    Q("Qual a diferença semântica entre RATIFICAR e RETIFICAR no texto do ofício?", ["Ratificar é rasgar. Retificar é assinar.", "Ratificar é confirmar a validade de algo. Retificar é consertar ou alterar o erro de algo.", "Ratificar é anular a lei na câmara cheia ruidosa em fúria. Retificar é votar.", "Ratificar é mentir rápido forte e liso com dolo. Retificar é chorar o fato triste frouxo sem graça do tribunal cego em chamas."], 1, 'Fácil', "Ratificar = Confirmar. Retificar = Corrigir."),
+                    Q("O plural CORRETO das palavras 'Cidadão', 'Alemão' e 'Guarda-chuva' é:", ["Cidadões, Alemões, Guardas-chuvas.", "Cidadãos, Alemães, Guarda-chuvas.", "Cidadães, Alemães, Guardas-chuva.", "Cidadões, Alemães, Guarda-chuvas."], 1, 'Difícil', "Cidadão -> Cidadãos. Alemão -> Alemães. Guarda-chuva -> Guarda-chuvas."),
+                    Q("A vírgula foi usada de forma PROIBIDA na frase:", ["Durante a noite, o vigia trancou as portas do CRAS.", "Os vereadores, aprovaram o novo estatuto na sessão matinal de ontem à tarde do mês quente seco de Equador forte em fúria livre solar do topo limpo alto.", "João, traga a caneta azul nova da mesa larga de canto vivo liso e limpo no fundo frio do almoxarifado triste lento rústico das antigas lajes romanas clássicas da capital do império caído na planície seca amarela triste vazia e oca", "Gosto de uva, pera e morango na salada doce gelada pura da festa animada rica farta no salão farto alto longo"], 1, 'Difícil', "Erro de Sintaxe: O uso da vírgula separando o Sujeito ('Os vereadores') diretamente do seu Verbo ('aprovaram') sem termo intercalado no meio é proibido. As demais descrições longas são distrações da banca FUNCERN."),
+                    Q("Em 'Todos os dias NÓS estudamos a lei SEVERAMENTE', as palavras destacadas são:", ["Pronome e Advérbio.", "Substantivo e Adjetivo.", "Adjetivo e Verbo.", "Verbo e Conjunção."], 0, 'Média', "Nós = Pronome Pessoal. Severamente = Advérbio de Modo."),
+
+                    // INFORMÁTICA (10 Qs)
+                    Q("O uso do software Google Drive, OneDrive ou Dropbox caracteriza o serviço de:", ["Criação de Vírus avançados em códigos em tela preta C++ limpo", "Cloud Computing (Armazenamento na Nuvem na internet fora do HD da máquina física).", "Compactação de arquivos WINZIP antigos.", "Limpeza de Histórico físico sujo de poeira do monitor do PC na sala central fria e branca de luz baixa"], 1, 'Fácil', "Hospeda os arquivos na internet nos servidores (Nuvem)."),
+                    Q("Malware devastador que age bloqueando/criptografando o HD da Prefeitura e cobra o desbloqueio em Bitcoin (Criptomoedas):", ["Cavalo de Tróia furtivo ágil", "Phishing pescador rústico do lago digital fundo oculto falso mentiroso no link liso brando oco e sujo", "Ransomware (Sequestro Digital).", "Worm formiga lixo cego mudo surdo"], 2, 'Fácil', "O ataque sequestrador cobra resgate."),
+                    Q("Qual o atalho padrão do Windows para Recortar um texto e Desfazer uma ação, respectivamente?", ["CTRL+C e CTRL+Z", "CTRL+X e CTRL+Z", "CTRL+X e CTRL+Y", "CTRL+V e CTRL+C"], 1, 'Média', "Recortar é o X. Desfazer é o Z."),
+                    Q("No Navegador, o 'S' do HTTPS aponta que o site tem:", ["Super velocidade no acesso", "Certificado de Segurança com navegação criptografada que blinda as senhas soltas digitadas velozmente nas telas vivas", "Sistema desatualizado de servidores de banco antigo de peças brutas físicas mecânicas", "Sem propagandas chatas longas e vídeos soltos nos topos largos em cores feias e pálidas de tela fria em salas sem som e eco baixo puro limpo e oco nas ruas limpas e rústicas de pedra colonial clássica do muro branco"], 1, 'Fácil', "A encriptação blinda os dados e acende o cadeado de navegação segura."),
+                    Q("A Memória do Computador que apaga seus dados integralmente ao cortar a energia na tomada chama-se:", ["SSD", "HD Magnético", "ROM BIOS", "Memória RAM"], 3, 'Média', "Volátil, ela esvazia sem eletricidade. É a mesa de trabalho temporária do processador."),
+                    Q("Ao compor um e-mail a várias pessoas do conselho, o Orientador Social não deseja que as pessoas vejam o endereço eletrônico umas das outras. Ele usa o campo:", ["Para", "Assunto", "Cc", "Cco (Cópia Oculta)"], 3, 'Fácil', "Esconde os remetentes, garantindo blindagem de dados."),
+                    Q("O arquivo de relatório no fim do mês tem a extensão '.XLSX'. Isso significa que ele foi salvo em um:", ["Editor de Imagens Photoshop", "Software de Planilhas (Microsoft Excel)", "Editor de Textos (Microsoft Word)", "Leitor de PDF Portátil leve de leitura rápida sem edições livres brutas e sujas no formato rígido do bloco liso de pixels finos limpos puros sem borrões ou manchas brancas frias e duras pesadas e lentas"], 1, 'Média', "A extensão X do final denota os arquivos modernos de planilha do MS Office Excel."),
+                    Q("Ao apagar um arquivo de um Pen Drive no Windows, o sistema:", ["Envia ele para a Lixeira da área de trabalho, permitindo restaurar fácil num clique simples com seta liza viva.", "O exclui permanentemente do dispositivo móvel sem passar pela zona de lixeira protetiva do disco rígido C: da máquina base do gabinete preto liso focado no chão frio e pálido", "O esconde em uma pasta invisível", "Grava o nome dele no banco do MS-DOS de segurança local em nuvens soltas altas sem redes ou nós de satélites no espaço escuro e gelado sem fim"], 1, 'Difícil', "Mídias removíveis comuns (como pendrives) não mandam arquivos deletados para a Lixeira do HD. Eles somem de vez."),
+                    Q("A Intranet da prefeitura de Equador diferencia-se da Internet pública pois:", ["Usa cabos de fios grossos rústicos da TV cabo velho no poste da praça suja central do sol vivo.", "É uma rede fechada, privada e restrita ao uso corporativo dos funcionários do município usando os mesmos protocolos e a mesma tecnologia de web.", "É uma rede sem fios feita para celulares de jogos.", "É muito lenta e não permite usar e-mails e nem senhas nos blocos ou planilhas nos relatórios semanais de visitas nas casas de taipa lisas foscas da margem do rio raso das curvas lentas do relevo de brita calcária dura frita quente."], 1, 'Fácil', "A intranet é a 'Internet interna' da firma."),
+                    Q("Ao selecionar um arquivo, o pressionar da tecla F2 resulta em:", ["Apagar", "Imprimir", "Ouvir", "Renomear"], 3, 'Média', "Abre a caixinha do texto do nome para edição ágil."),
+
+                    // LEGISLAÇÃO E HISTÓRICO DE EQUADOR/RN (10 Qs)
+                    Q("Segundo a Lei Orgânica do Município de Equador, é INCORRETO afirmar que compõe o poder da cidade o:", ["Poder Judiciário Municipal, liderado pelo Promotor e Juízes locais em praças no centro forte denso do paço civil legal antigo e clássico de mármore e cedro", "Poder Executivo liderado pelo Prefeito e o Legislativo liderado pela Câmara.", "A Câmara de Vereadores que faz as leis locais e aprova orçamentos.", "O Prefeito Municipal, que sanciona e veta a lei do bloco legislador de Equador vivo atuante livre liso e limpo na rua."], 0, 'Fácil', "Não existe Judiciário Municipal. Apenas Estadual e Federal na hierarquia da república."),
+                    Q("Para assumir seu cargo, o servidor nomeado em Equador tem até 30 dias para tomar Posse. E a contar da Posse, ele tem quantos dias para Entrar em Exercício efetivamente na função?", ["15 dias.", "30 dias.", "60 dias.", "90 dias."], 1, 'Média', "São 30 dias na Portaria de Nomeação para Posse, e até mais 30 dias a partir da Posse para o efetivo Exercício no local do CRAS. (Art. 32)."),
+                    Q("O Estatuto do Servidor de Equador (Lei 384/97) aplica a pena de Demissão no abandono de cargo quando a ausência injustificada e intencional do serviço supera:", ["10 dias ininterruptos", "20 dias continuados", "30 dias parados", "60 dias interpolados no meio de licenças frias longas."], 1, 'Difícil', "O art. 196, §2º da lei de Equador fixou prazo menor que o federal: passou de 20 dias contínuos, é abandono."),
+                    Q("Se o cargo do Orientador Social de Equador for extinto por alguma reforma radical nas leis municipais, o que ocorre com o servidor ESTÁVEL (concursado e pós probatório)?", ["Ele perde o emprego na mesma hora no sol forte das duas tardes secas e brancas amarelas sem vento e calor alto", "Fica em disponibilidade técnica remunerada proporcional ao seu tempo servido, aguardando ser aproveitado em cargo similar do governo", "O Prefeito deve mantê-lo ganhando o triplo nos anos pares em casa limpo sem tarefas", "É demitido sumariamente com aspas no diário frio lento."], 1, 'Média', "A estabilidade constitucional lhe garante a disponibilidade recebendo, até voltar noutra área similar."),
+                    Q("Equador surgiu como um povoado e, em março de 1953, ocorreu a sua Emancipação Política definitiva, deixando as terras do município de:", ["Caicó das carnes de sol fortes velhas clássicas secas no vento agreste rústico potiguar", "Currais Novos das minas de scheelita densas em túneis e cavernas molhadas úmidas quentes de salitre solto", "Parelhas, cidade mãe da qual o povoado equatoriano se desmembrou no processo.", "Santana do Seridó de rios baixos lisos secos nos barros pretos amargos."], 2, 'Fácil', "Equador separou-se de Parelhas."),
+                    Q("A geografia econômica de Equador fundamenta-se historicamente e com vigor nos dias atuais em qual extrativismo mineral formador de riqueza potiguar?", ["Sal, num complexo de dunas da costa marítima branca e fria molhada nas correntes", "Caulim e pegmatitos da mineração encravada na Serra e no relevo calcário de borborema rústica antiga e viva do sertão nordestino mineral intenso limpo denso.", "Alumínio das caixas da bauxita roxa pesada", "Petróleo e seus poços profundos pretos finos molhados de óleos viscerais viscosos e sujos no mar azul da fenda escura rasteira mansa livre viva."], 1, 'Média', "É o império da mineração de caulim e derivados da província geológica do Seridó."),
+                    Q("Equador integra qual importante projeto, validado pela UNESCO, que atrai o turismo geológico mundial protegendo os lajedos do sertão?", ["Geoparque Seridó.", "Reserva Indígena dos Tabajaras das encostas soltas amarelas rasas livres secas.", "Parque das Emas dos pássaros vivos da caatinga agreste da relva.", "Furna da Borborema dos cactos verdes e brancos em areias vivas."], 0, 'Fácil', "Turismo, preservação e mineração de mãos dadas no Geoparque Seridó."),
+                    Q("A câmara municipal de Equador quer emendar a própria Constituição da cidade (Lei Orgânica Municipal). Tal mudança exige aprovação em plenário de:", ["Metade dos edis", "1/3 da casa", "2/3 dos membros em votação qualificada e robusta.", "Da população nas urnas do domingo de sol a pino brando e frio no largo da praça rica de árvores do asfalto limpo."], 2, 'Difícil', "Mudar a Lei Orgânica (LOM) exige força bruta política (2/3 da Câmara)."),
+                    Q("No mês de janeiro em Equador/RN, a cidade mobiliza seus fiéis na maior festa religiosa do ano, celebrando o seu Padroeiro:", ["São Pedro", "São João do Arraial", "Santo Antônio", "São Sebastião das festas católicas tradicionais centenárias do interior nordestino de fé mansa forte e popular nas ruas."], 3, 'Fácil', "Padroeiro oficial da cidade."),
+                    Q("Quando o Prefeito recebe uma lei da Câmara e tem até 15 dias úteis para opinar, e ele a reprova (devolve sem assinar a aprovação), aplicou o ato de:", ["Delegação na urna do processo cego", "Veto ao projeto no rito formal do cargo.", "Cassação do mandato do vereador autor.", "Proclamação judicial penal sumária da corte alta estadual distante da planície baixa frita de areia viva do mato da caatinga pura nordestina e regional."], 1, 'Média', "Sanção = Aprovar. Veto = Rejeitar."),
+
+                    // LEGISLAÇÃO SOCIAL, SUAS E O CARGO (15 Qs)
+                    Q("Um idoso de 72 anos e um de 83 anos entram no CRAS na mesma hora. Quem passa na frente da fila pelo Estatuto da Pessoa Idosa atualizado?", ["O de 72 por ser mais ágil nas portas.", "O de 83, em virtude da Prioridade Especial (maiores de 80).", "Apenas por ordem alfabética do nome do papel branco solto vivo.", "Sorteio nos dados vivos de roda plástica fina macia da recepção cega limpa do ar frio e doce da sala ampla livre lisa de azulejos fáceis e leves"], 1, 'Fácil', "Lei 13.466/2017: Maiores de oitenta anos têm preferência sobre os demais idosos."),
+                    Q("Qual órgão público permanente é composto por cidadãos votados na cidade e possui o dever autônomo (não são juízes) de zelar pelo cumprimento do ECA nas suspeitas de abuso infantil no território?", ["A Câmara.", "O Ministério do Trabalho livre nas pontas", "O Conselho Tutelar.", "O Conselho Tutelar não existe mais. É o próprio Prefeito quem atua pessoalmente focado nas causas puras das praças frias"], 2, 'Fácil', "O Conselho Tutelar aplica as medidas protetivas de zeladoria da rede."),
+                    Q("Para a Constituição, o SUAS e a LOAS operam em eixos da Proteção Social. Qual equipamento de assistência age NA PREVENÇÃO, enquanto a família ainda preserva os laços?", ["CRAS da Básica", "CREAS da Especial Média Complexa de crimes", "Abrigo Asilar do idoso acamado esquecido limpo forte mudo", "Centro de Detenção prisional local do fim fechado gradeado negro sujo denso fosco baço do porão amargo e rústico lento frito nas celas pequenas escuras baixas secas brutas rudes cruas e frias de pedras de calcário cinza"], 0, 'Fácil', "O Centro de Referência de Assistência Social (CRAS) e seus serviços preventivos (PAIF e SCFV)."),
+                    Q("O Orientador Social deve, ao presenciar casos em oficinas grupais em que haja a narração nítida de maus-tratos intrafamiliares de vulneráveis:", ["Repassar de modo técnico e ético o relato ao corpo de psicólogos e assistentes sociais do CRAS para as medidas em rede via Conselho Tutelar e CREAS.", "Esquecer a história porque do portão pra fora a família é quem sabe o que faz e como bate no menino de casa amarela forte alta viva e cega no topo largo.", "Fazer um post de protesto nas redes sociais marcando o nome dos pais do aluno no ar com fotos livres de tela e letras de fogo puro do ódio denso", "Invadir a casa dos pais com arma na mão suja e bruta sem o juiz ou a polícia civil viva no meio da tarde clara forte livre solar azul das planícies"], 0, 'Média', "O silêncio diante do abuso ou a 'ação de xerife' não são papel do Educador/Orientador, mas sim acionar os caminhos da proteção legal via sua equipe técnica (encaminhamento intersetorial)."),
+                    Q("A partir de que idade o ECA no Brasil abre brecha para um adolescente acessar o trabalho através de contrato exclusivo e especial amparado na aprendizagem?", ["Doze.", "Treze.", "Quatorze.", "Dezesseis no celetismo normal geral clássico livre de escritório limpo leve simples focado denso e brando puro e fácil."], 2, 'Média', "Trabalho só a partir dos 16. O 'Aprendiz' (com escola e direitos mantidos) é a única liberação formal aos 14 anos."),
+                    Q("O valor do benefício BPC garantido pela lei LOAS e operacionalizado nas agências do INSS para idosos miseráveis que passam no teto per capita restrito do estado é:", ["Um bilhete de R$ 500 para leite e gás das cozinhas de barro antigas e fracas dos anos frios lentos secos vazios ocos do século rústico amargo liso baço", "Um salário mínimo mensal garantido perante as leis orgânicas e não gera décimo terceiro salário nos fins de ano soltos frios", "Dois salários de ajuda emergencial seca limpa fina na alta renda per capita grossa de viés cego vivo livre alto raso no topo calmo.", "Cem reais fixos mensais do fundo global de renda farta do rico centro liso sem o pobre oco da rua cinza pálida longa larga pura fresca leve cega macia maciça densa de muros altos fortes"], 1, 'Média', "O BPC dá 1 SM por mês a quem comprove deficiência de longo prazo ou tenha mais de 65 anos sob pobreza limite extrema (<= 1/4 SM per capita)."),
+                    Q("Segundo a LOAS, a Assistência Social brasileira exige que a pessoa pague parcelas prévias iguais a do INSS para poder usar os abrigos do estado na chuva da crise do frio vazio livre leve doce rústico denso das ruas baixas secas da favela liza e pobre oca cinza do morro rústico vivo cego surdo baço lento solto amargo calmo mudo?", ["Sim, quem não tem carteira não tem direito na fila grande cheia do calor quente do sol raso.", "Não. A LOAS determinou a assistência como Direito do Cidadão e Política 'Não-Contributiva' provida a quem precisar, na hora da desgraça farta do risco.", "Apenas mulheres podem não contribuir com moedas vivas soltas pratas fortes limpas e velhas na poupança pública falida nua.", "Todos pagam nos impostos estaduais dos pátios cívicos no guichê do cofre fechado escuro denso grosso largo longo de aço puro liso vivo fino forte maciço cego cru raso oco e surdo do balcão vazio lento branco pálido feio e sujo nas quinas velhas de poeira branca"], 1, 'Fácil', "Princípio vital da LOAS: É Política de Seguridade Social NÃO CONTRIBUTIVA (gratuita) ao cidadão."),
+                    Q("Um jovem do SCFV que for flagrado na infração grave (Roubo), por ter 15 anos sofrerá, conforme o ECA, punições cívicas do Juiz da Vara da Infância na figura da chamada:", ["Medida Socioeducativa (Internação, Prestação de Serviços à Comunidade).", "Prisão Civil de código penal adulto (Papuda).", "Medida Protetiva de Acolhimento em creches de bebês do berço colorido doce frágil limpo fofo dos lençóis macios limpos na paz do sono leve fácil tenro meigo.", "Nenhuma medida legal, porque a lei frouxa o solta de imediato nas avenidas quentes amplas das pontes cinzas da rodovia alta longa de caminhões brutais largos vermelhos lentos vazios secos focados pesados brutos puros velhos feios densos no asfalto quente forte liso macio cego derretido livre brilhante escuro sujo"], 0, 'Média', "Adolescente sofre a aplicação de Medidas Socioeducativas."),
+                    Q("Se uma Criança (exemplo: 10 anos) furta um mercado, o ECA dita que o ato infracional desta infância gera nela:", ["Prisão", "Aplicação rigorosa de Medida Protetiva restrita aos pais e ao jovem na presença cívica forte e pacífica do Conselho Tutelar do Município agindo no bairro de Equador denso da calçada limpa pura livre fresca azul branca das paredes velhas roxas rosas foscas calmas baças brutas rudimentares das pedras velhas lizas opacas fracas moles ocos murchas caídas soltas cegas nobres puras lentas das pontes ocas limpas", "Morte moral", "Trabalhos duros em vias abertas do poço sujo feio no escuro do fim tenso bruto largo lento raso opaco baço morto podre mudo livre denso forte e grosso do mato cinza verde musgo escuro solto quente fino rústico seco frito de lama fétida grossa marrom murcha calma livre tenra fina"], 1, 'Difícil', "CRIANÇA NUNCA leva punição (socioeducativa). Criança só recebe Medida de Proteção."),
+                    Q("O SCFV (Serviço de Convivência) possui como meta na prática diária grupal do CRAS a:", ["Aplicação e mediação de vivências em grupo para fortalecer identidades, fomentar o protagonismo comunitário, a arte, esporte, afeto e a autonomia do idoso ou da criança nos moldes da cidadania.", "Ouvir apenas sermões políticos para votar nos candidatos do preito eleitoral nas urnas em outubro de ano longo no calor tenso de filas enormes vivas plenas", "Ensinar física e química avançadas de engenharia dura nos cadernos grossos fritos no teto claro puro cego cego vazio liso denso sujo liso branco", "Nada se faz no grupo senão dormir focado cego no banco mole"], 0, 'Fácil', "Fortalecimento de vínculos pela convivência em cidadania e protagonismo nos grupos do SUAS."),
+                    Q("Um jovem em liberdade assistida (MSE) de 17 anos pede pra fazer oficinas culturais no CRAS. O Orientador Social deve:", ["Fechá-lo do lado de fora em punição", "Garantir o acolhimento sem preconceitos morais e o tratamento equânime com sigilo, estimulando sua convivência fraterna e pacífica social nos quadros de cidadania do território com os outros sem rotular o passado judicial da pessoa", "Omitir o caso aos policiais vivos da porta alta nas praças quentes.", "Expulsar na frente da mãe no tapete azul pálido limpo do prédio limpo longo largo vazio raso seco quente mudo."], 1, 'Média', "O Serviço Social, o SUAS e o SCFV repudiam preconceitos ou a rotulação eterna. A reintegração sem preconceitos e discriminação é lei da PNAS."),
+                    Q("O Orientador Social planeja os grupos de idosos e percebe que as atividades estão infantilizando os participantes do bairro (ex: pintar desenhos pontilhados simples de forma forçada diária monótona chata parada inócua inútil lenta pura cega oca e fácil fútil rasa fraca mole murcha boba lisa morta fria feia solta frouxa frívola oca rude baça velha morta oca limpa do sol quente nas tardes lentas livres amargas de Equador forte bruto intenso denso nas sombras fracas). Qual o erro metodológico na postura e abordagem dele?", ["Errou por não dar doces antes na boca com sopa quente e rústica", "Ele descumpre o princípio de envelhecimento ativo na PNAS. Idosos possuem potência criativa, memória social e bagagem de vida. Infantilizar destitui a cidadania e não eleva ou fortalece seus vínculos complexos de vida adulta rica", "Acertou em cheio pois velhos são meras crianças nas almas limpas finas duras do século triste vivo tenso livre solto mudo cego", "Acertou em dar lazer barato na praça azul lenta calma pura limpa liza no banco cru murcho nobre simples opaco pálido"], 1, 'Difícil', "O SUAS condena o assistencialismo passivo e a infantilização do cidadão nos eixos de proteção. Resgate a autonomia da pessoa humana sempre em qualquer etapa de sua longa estrada civil e existencial."),
+                    Q("No conceito da 'Matricialidade Sociofamiliar' os direitos e políticas de Equador olham em qual viés vital?", ["Foca as cestas só no homem pai livre só solto cego tenso oco e rico limpo e vivo na rua limpa lisa vazia do centro", "A família não é um número, é o núcleo centralizado de proteção da pessoa. Em vez de amparar só o indivíduo isolado que pede o auxílio (a criança doente), ampara-se o núcleo inteiro do lar como pilar protetor de vida", "Foca só na escola e na parede de tijolo baço opaco cru nobre rústico do beco largo fundo rasteiro baixo forte", "Isola as mulheres e pune as avós que criam filhos com dinheiro de feiras públicas na prefeitura cinza"], 1, 'Média', "Toda ação é matriciada pela família em seu território da vulnerabilidade."),
+                    Q("CRIANÇA aos 9 anos trabalha como faxineira de mercado na cidade. Pelo ECA e o SUAS isso se enquadra em violação plena gravíssima (Trabalho Infantil), o que exige o acompanhamento de qual equipe do serviço especializado contra violências em direitos básicos violados?", ["Equipe do Serviço de Proteção Básica do PAIF na tenda da igreja da serra alta limpa lisa crua dura bruta", "Equipe do CREAS em Ação Especializada (Média Complexidade - PAEFI).", "Posto de gasolina na praça do posto branco pálido longo vazio frio", "Cadeia do Exército negro livre forte duro alto limpo puro frio amargo solto."], 1, 'Média', "Toda violação de direitos e riscos (violência, abuso, trabalho menor, crack na infância) gera intervenção intersetorial via CREAS na Proteção Especial Estadual/Municipal no SUAS federal orgânico e coeso."),
+                    Q("O BPC garante pagamentos federais operados pela burocracia das pericias sociais e médicas amplas e fundas do INSS no Brasil todo. Quem fornece o recurso final do pagamento é?", ["Os Prefeitos Municipais no FPM local", "Apenas as multas estaduais na Receita Fria da SEFAZ na praça cívica de Natal capital das praias lisas belas puras e límpidas finas brancas densas fofas ricas doces mansas de ondas francas puras fáceis e brandas do Atlântico azul verde quente livre calmo", "O Governo Federal (União). É recurso não-contributivo constitucional mantido pela verba da União", "Os impostos dos empresários privados de empresas ricas de shoppings luxuosos do centro farto nobre de fachadas límpidas de ar vivo limpo puro doce no chão livre de cerâmica farta e luz viva"], 2, 'Fácil', "O BPC (artigo 203 da CF e LOAS) é constitucional e de responsabilidade de cofre puro do erário federal da União repassado pela gestão do INSS autárquico nos guichês e telas vivas nas cidades secas fortes soltas plenas dos vales quentes ocos largos fundos rústicos crus densos e calmos.")
+                ]
+            }
+        ];
+
+        // --- CONTROLE DE ESTADO ---
+        let currentLessonId = null;
+        let currentQuestions = [];
+        let answers = {};
+        let score = 0;
+        let questionHistory = {};
+
+        // --- FUNÇÕES GLOBAIS DE INTERAÇÃO ---
+        function initApp() {
+            try {
+                renderRaioX();
+                renderCronogramaList();
+                switchTab('cronograma');
+            } catch (e) {
+                console.error("Erro na inicialização do app:", e);
+            }
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'border-blue-600', 'text-white');
+                btn.classList.add('border-transparent', 'text-indigo-300');
+            });
+            
+            const activeBtn = document.getElementById(`tab-${tabName}`);
+            if (activeBtn) {
+                activeBtn.classList.add('active', 'text-white');
+                activeBtn.classList.remove('text-indigo-300');
+            }
+
+            document.querySelectorAll('.view-section').forEach(view => {
+                view.classList.add('hidden');
+            });
+            
+            const view = document.getElementById(`view-${tabName}`);
+            if (view) {
+                view.classList.remove('hidden');
+            }
+
+            if (tabName === 'cronograma') {
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function renderRaioX() {
+            const container = document.getElementById('view-raio-x');
+            if(!container) return;
+
+            let datasHtml = concursoData.datasImportantes.map(d => `
+                <li class="relative pl-6 pb-2 ${d.highlight ? 'bg-indigo-50 -mx-4 px-4 py-3 rounded-xl border border-indigo-100' : ''}">
+                    <div class="absolute left-0 top-1 w-2 h-2 rounded-full ${d.highlight ? 'bg-indigo-600' : 'bg-slate-300'}"></div>
+                    ${!d.highlight ? `<div class="absolute left-[3px] top-4 w-px h-full bg-slate-200"></div>` : ''}
+                    <div class="font-bold ${d.highlight ? 'text-indigo-900 text-lg' : 'text-slate-700'}">${d.evento}</div>
+                    <div class="flex items-center gap-1 font-medium mt-1 ${d.highlight ? 'text-indigo-600' : 'text-slate-500 text-sm'}">
+                        <i class="ph ${d.icon}"></i> ${d.data}
+                    </div>
+                </li>
+            `).join('');
+
+            let editalHtml = concursoData.conteudoProgramatico.map(c => `
+                <div class="bg-slate-50/50 p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm w-full">
+                    <h4 class="font-black text-indigo-900 mb-6 text-2xl flex items-center justify-between border-b border-slate-200 pb-4">
+                        ${c.disciplina} <i class="ph-bold ph-check-circle text-emerald-500"></i>
+                    </h4>
+                    <div class="w-full">${c.topicos}</div>
+                </div>
+            `).join('');
+
+            container.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-6 relative overflow-hidden">
+                            <div class="w-24 h-24 bg-indigo-100 rounded-2xl flex items-center justify-center shrink-0 border border-indigo-200">
+                                <i class="ph-duotone ph-identification-badge text-5xl text-indigo-700"></i>
+                            </div>
+                            <div class="text-center sm:text-left relative z-10">
+                                <div class="inline-flex items-center gap-2 bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded-full text-xs mb-2">
+                                    <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div> Concurso Equador/RN
+                                </div>
+                                <h2 class="text-3xl font-black text-slate-800 mb-2">${concursoData.cargo}</h2>
+                                <p class="text-slate-500 font-medium text-lg">${concursoData.banca} • ${concursoData.vagas}</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                                <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0 text-emerald-600">
+                                    <i class="ph-bold ph-money text-2xl"></i>
+                                </div>
+                                <div><p class="text-xs font-bold text-slate-400 uppercase">Vencimento Base</p>
+                                     <p class="text-xl font-black text-emerald-700">${concursoData.salario}</p></div>
+                            </div>
+                            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                                <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center shrink-0 text-blue-600">
+                                    <i class="ph-bold ph-clock text-2xl"></i>
+                                </div>
+                                <div><p class="text-xs font-bold text-slate-400 uppercase">Carga Horária</p>
+                                     <p class="text-xl font-black text-slate-700">${concursoData.cargaHoraria}</p></div>
+                            </div>
+                            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 sm:col-span-2">
+                                <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center shrink-0 text-amber-600">
+                                    <i class="ph-bold ph-graduation-cap text-2xl"></i>
+                                </div>
+                                <div><p class="text-xs font-bold text-slate-400 uppercase">Requisitos</p>
+                                     <p class="text-lg font-bold text-slate-700">${concursoData.requisito}</p></div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 text-slate-100 p-8 rounded-3xl shadow-lg relative overflow-hidden">
+                            <h3 class="text-xl font-black mb-4 flex items-center gap-2 border-b border-slate-700 pb-3">
+                                <i class="ph-bold ph-list-checks text-blue-400"></i> Atribuições Práticas
+                            </h3>
+                            <p class="text-slate-300 leading-relaxed text-base font-medium text-justify">${concursoData.atribuicoes}</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm h-full">
+                            <h3 class="text-xl font-black text-slate-800 mb-6 flex items-center gap-2 border-b pb-3">
+                                <i class="ph-bold ph-calendar-blank text-indigo-600"></i> Datas Críticas
+                            </h3>
+                            <ul class="space-y-4">${datasHtml}</ul>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-3">
+                        <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+                            <h3 class="text-3xl font-black text-slate-800 mb-8 flex items-center gap-2 border-b border-slate-100 pb-4">
+                                <i class="ph-bold ph-books text-indigo-600"></i> Conteúdo Programático Otimizado
+                            </h3>
+                            <div class="grid grid-cols-1 gap-8">${editalHtml}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderCronogramaList() {
+            const container = document.getElementById('cronograma-list');
+            if(!container) return;
+            
+            let html = '';
+            let completedCount = 0;
+
+            aulasDatabase.forEach(aula => {
+                const isCompleted = questionHistory[aula.id] && questionHistory[aula.id].completed;
+                if(isCompleted) completedCount++;
+
+                const isSimulado = aula.id === 8;
+                const bgClass = isSimulado ? 'bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200' : 'bg-white hover:border-indigo-300 border-slate-200';
+                const iconClass = isSimulado ? 'ph-target text-emerald-600' : 'ph-book-open text-indigo-600';
+                
+                html += `
+                    <div onclick="openAula(${aula.id})" class="cursor-pointer transition-all border rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${bgClass}">
+                        <div class="flex items-center gap-4 sm:gap-6">
+                            <div class="w-14 h-14 sm:w-16 sm:h-16 ${isSimulado ? 'bg-emerald-100' : 'bg-indigo-50'} rounded-2xl flex items-center justify-center shrink-0">
+                                <i class="ph-bold ${iconClass} text-2xl sm:text-3xl"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-2">
+                                    <i class="ph-fill ph-calendar-blank"></i> ${aula.dia}
+                                    ${isCompleted ? '<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px]"><i class="ph-bold ph-check"></i> Concluído</span>' : ''}
+                                </div>
+                                <h3 class="text-lg sm:text-xl font-black text-slate-800">${aula.disciplina}</h3>
+                                <p class="text-slate-500 font-medium text-sm sm:text-base mt-0.5">${aula.tema} - <span class="font-bold text-indigo-700">${aula.questoes.length} Questões</span></p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 sm:w-48 justify-end shrink-0">
+                            <div class="hidden sm:block text-right">
+                                <div class="text-xs font-bold text-slate-400 uppercase">Status da Aula</div>
+                                <div class="text-sm font-black text-slate-700">${isCompleted ? 'Finalizada' : 'Pendente'}</div>
+                            </div>
+                            <div class="w-full sm:w-24 h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="h-full ${isSimulado ? 'bg-emerald-500' : 'bg-indigo-500'} transition-all" style="width: ${isCompleted ? '100%' : aula.progresso + '%'}"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            
+            let globalProg = Math.round((completedCount / aulasDatabase.length) * 100);
+            document.getElementById('global-progress-text').innerText = `${globalProg}%`;
+        }
+
+        function openAula(id) {
+            const lesson = aulasDatabase.find(a => a.id === id);
+            if(!lesson) return;
+
+            currentLessonId = id;
+            answers = {};
+            score = 0;
+
+            currentQuestions = [...lesson.questoes];
+
+            document.querySelectorAll('.view-section').forEach(v => v.classList.add('hidden'));
+            document.getElementById('view-aula').classList.remove('hidden');
+            window.scrollTo(0,0);
+
+            const isSimulado = (id === 8);
+
+            document.getElementById('lesson-header-content').innerHTML = `
+                <div class="flex items-center gap-4 fade-in">
+                    <div class="w-16 h-16 ${isSimulado ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-white/20 text-white border-white/20'} rounded-2xl flex items-center justify-center backdrop-blur-sm border">
+                        <i class="ph-bold ${isSimulado ? 'ph-target' : 'ph-book-open'} text-4xl"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="bg-indigo-800 text-indigo-100 text-xs font-bold px-2 py-1 rounded tracking-widest uppercase"><i class="ph-bold ph-calendar"></i> ${lesson.dia}</span>
+                        </div>
+                        <h2 class="text-3xl md:text-4xl font-black text-white mb-1">${lesson.disciplina}</h2>
+                        <p class="text-lg font-medium text-indigo-200">${lesson.tema} - <strong class="text-white">${currentQuestions.length} Questões Táticas</strong></p>
+                    </div>
+                </div>
+            `;
+            
+            setTimeout(() => {
+                document.getElementById('lesson-progress-bar').style.width = `100%`;
+            }, 100);
+
+            const theoryContainer = document.getElementById('lesson-theory');
+            let theoryHtml = '';
+            if (lesson.teoria && lesson.teoria !== "") {
+                theoryHtml += `<div class="fade-in">${lesson.teoria}</div>`;
+            }
+            if (lesson.perolas && lesson.perolas !== "") {
+                theoryHtml += `
+                    <div class="mt-8 bg-slate-900 rounded-2xl p-8 border-l-8 border-amber-400 shadow-xl fade-in relative">
+                        <h3 class="text-2xl font-black text-amber-400 mb-4 flex items-center gap-3"><i class="ph-bold ph-key"></i> Dica de Ouro das Bancas</h3>
+                        <div class="text-slate-300 font-medium text-lg">${lesson.perolas}</div>
+                    </div>
+                `;
+            }
+
+            if (!theoryHtml) {
+                theoryContainer.classList.add('hidden');
+            } else {
+                theoryContainer.classList.remove('hidden');
+                theoryContainer.innerHTML = theoryHtml;
+            }
+
+            renderQuestionsUI();
+            document.getElementById('lesson-questions-area').classList.remove('hidden');
+        }
+
+        function renderQuestionsUI() {
+            const container = document.getElementById('questions-container');
+            let html = '';
+
+            currentQuestions.forEach((q, qIndex) => {
+                let badgeClass = 'bg-slate-100 text-slate-800';
+                if(q.d === 'Fácil') badgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-200';
+                if(q.d === 'Média') badgeClass = 'bg-amber-100 text-amber-800 border-amber-200';
+                if(q.d === 'Difícil') badgeClass = 'bg-rose-100 text-rose-800 border-rose-200';
+
+                html += `
+                    <div class="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-sm fade-in" id="q-block-${qIndex}">
+                        <div class="flex justify-between items-start mb-6 border-b border-slate-100 pb-4">
+                            <span class="bg-slate-800 text-white font-black text-lg w-10 h-10 flex items-center justify-center rounded-xl shrink-0">${qIndex + 1}</span>
+                            <span class="border ${badgeClass} text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Nível: ${q.d}</span>
+                        </div>
+                        
+                        <h4 class="text-xl font-bold text-slate-800 mb-6 leading-relaxed">${q.t}</h4>
+                        
+                        <div class="space-y-3">
+                            ${q.o.map((alt, altIndex) => {
+                                const letters = ['A', 'B', 'C', 'D'];
+                                return `
+                                    <div class="alt-container relative bg-slate-50 border border-slate-200 rounded-xl p-4 cursor-pointer hover:bg-indigo-50 hover:border-indigo-200 flex gap-4 items-center" id="alt-${qIndex}-${altIndex}" onclick="selectAnswer(${qIndex}, ${altIndex})">
+                                        <div class="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-white border border-slate-300 text-slate-400 hover:bg-slate-100 z-10" onclick="toggleStrike(event, this)">
+                                            <i class="ph-bold ph-scissors tesoura-icon text-lg pointer-events-none"></i>
+                                        </div>
+                                        <div class="flex-grow flex items-center gap-4 pointer-events-none">
+                                            <div class="w-8 h-8 rounded-full border-2 border-slate-300 flex items-center justify-center font-bold text-slate-500 shrink-0 option-letter">${letters[altIndex]}</div>
+                                            <span class="text-slate-700 font-medium text-lg pointer-events-none">${alt}</span>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        
+                        <div id="expl-${qIndex}" class="hidden mt-6 p-5 rounded-2xl border-l-4 text-slate-700 font-medium bg-slate-50"></div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function toggleStrike(e, element) {
+            e.stopPropagation(); 
+            const parent = element.closest('.alt-container');
+            if (parent.classList.contains('locked') || parent.classList.contains('correct-answer')) return;
+            parent.classList.toggle('eliminated');
+        }
+
+        function selectAnswer(qIndex, altIndex) {
+            if(answers[qIndex] !== undefined) return; 
+            
+            const question = currentQuestions[qIndex];
+            const isCorrect = (altIndex === question.a);
+            
+            answers[qIndex] = { selected: altIndex, correct: isCorrect };
+            if(isCorrect) score++;
+
+            question.o.forEach((_, idx) => {
+                const el = document.getElementById(`alt-${qIndex}-${idx}`);
+                el.classList.add('locked');
+                el.classList.remove('hover:bg-indigo-50', 'hover:border-indigo-200', 'cursor-pointer', 'eliminated');
+                
+                const letterDiv = el.querySelector('.option-letter');
+
+                if (idx === question.a) {
+                    el.classList.add('correct-answer');
+                    letterDiv.innerHTML = '<i class="ph-bold ph-check text-xl"></i>';
+                    letterDiv.classList.replace('border-slate-300', 'border-emerald-600');
+                } else if (idx === altIndex && !isCorrect) {
+                    el.classList.add('wrong-answer');
+                    letterDiv.innerHTML = '<i class="ph-bold ph-x text-xl"></i>';
+                    letterDiv.classList.replace('border-slate-300', 'border-rose-600');
+                } else {
+                    el.classList.add('opacity-40');
+                }
+            });
+
+            const explDiv = document.getElementById(`expl-${qIndex}`);
+            explDiv.classList.remove('hidden');
+            if (isCorrect) {
+                explDiv.classList.add('border-emerald-500');
+                explDiv.innerHTML = `<h5 class="text-emerald-700 font-bold mb-1 flex items-center gap-2"><i class="ph-fill ph-check-circle text-xl"></i> Resposta Correta! Raio-X do Professor:</h5>${question.e}`;
+            } else {
+                explDiv.classList.add('border-rose-500');
+                explDiv.innerHTML = `<h5 class="text-rose-700 font-bold mb-1 flex items-center gap-2"><i class="ph-fill ph-x-circle text-xl"></i> Resposta Incorreta. Raio-X do Professor:</h5>${question.e}`;
+            }
+        }
+
+        function finishLesson() {
+            const total = currentQuestions.length;
+            const answered = Object.keys(answers).length;
+            
+            if (answered < total) {
+                const warContainer = document.getElementById('temp-warning-container');
+                warContainer.innerHTML = `<div class="text-rose-600 font-bold mt-4 animate-pulse"><i class="ph-bold ph-warning"></i> Faltam ${total - answered} questões para terminar o bloco inteiro. Concentre-se!</div>`;
+                setTimeout(() => warContainer.innerHTML = '', 4000);
+                return;
+            }
+
+            let stats = { 'Fácil': { t: 0, c: 0 }, 'Média': { t: 0, c: 0 }, 'Difícil': { t: 0, c: 0 } };
+
+            currentQuestions.forEach((q, idx) => {
+                if(stats[q.d]) {
+                    stats[q.d].t++;
+                    if(answers[idx].correct) stats[q.d].c++;
+                }
+            });
+
+            let strengths = [];
+            let weaknesses = [];
+
+            ['Fácil', 'Média', 'Difícil'].forEach(level => {
+                if (stats[level].t > 0) {
+                    let perf = stats[level].c / stats[level].t;
+                    if (perf >= 0.7) strengths.push(`Alta retenção em questões do tipo <strong>${level}</strong> (${stats[level].c}/${stats[level].t} Acertos).`);
+                    else weaknesses.push(`Revisar teoria estratégica e foco atencional em questões <strong>${level}</strong> (${stats[level].c}/${stats[level].t} Acertos).`);
+                }
+            });
+
+            if (strengths.length === 0) strengths.push("A consistência resolve a prova. Leia atentamente os comentários dos erros e repita o simulado.");
+            if (weaknesses.length === 0) weaknesses.push("Rendimento de Elite em todos os níveis. Excelente padrão FUNCERN!");
+
+            document.getElementById('diag-score').innerText = `${score}/${total}`;
+            document.getElementById('diag-percent').innerText = `${Math.round((score/total)*100)}%`;
+            document.getElementById('diag-strengths').innerHTML = strengths.map(s => `<li>${s}</li>`).join('');
+            document.getElementById('diag-weaknesses').innerHTML = weaknesses.map(w => `<li>${w}</li>`).join('');
+            document.getElementById('diag-quote').innerText = `"Repetição e suor na preparação poupam sangue na batalha final da prova."`;
+
+            const modal = document.getElementById('diagnostic-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                document.getElementById('diagnostic-content').classList.remove('scale-95', 'opacity-0');
+                document.getElementById('diagnostic-content').classList.add('scale-100', 'opacity-100');
+            }, 10);
+
+            questionHistory[currentLessonId] = { completed: true, score: score, total: total };
+            renderCronogramaList(); 
+        }
+
+        function closeDiagnostic() {
+            const modal = document.getElementById('diagnostic-modal');
+            document.getElementById('diagnostic-content').classList.remove('scale-100', 'opacity-100');
+            document.getElementById('diagnostic-content').classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                switchTab('cronograma');
+            }, 300);
+        }
+
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
