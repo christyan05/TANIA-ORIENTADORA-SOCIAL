@@ -3,947 +3,1111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OrientIA - Mentor Estratégico para Concursos</title>
-    
+    <title>OrientaAção - Mentor Estratégico para Orientador Social</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
-        .drop-cap::first-letter { font-size: 4rem; font-weight: 900; float: left; margin-top: 0.1rem; margin-right: 0.75rem; line-height: 0.8; color: #1e3a8a; text-shadow: 2px 2px 0px rgba(191, 219, 254, 0.5); }
-        .fade-in { animation: fadeIn 0.4s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; color: #1E293B; }
+        .drop-cap::first-letter {
+            float: left;
+            font-size: 4rem;
+            line-height: 0.8;
+            font-weight: 900;
+            margin-right: 0.5rem;
+            color: #1E3A8A; /* Azul marinho escuro */
+            text-transform: uppercase;
+        }
+        .palavra-chave { font-weight: 800; color: #0F172A; background-color: #FEF08A; padding: 0 4px; border-radius: 4px; }
+        .alerta-banca { background-color: #1E293B; color: #F8FAFC; padding: 1rem; border-left: 6px solid #EF4444; border-radius: 4px; font-weight: bold; }
         
-        .tab-btn { transition: all 0.3s ease; }
-        .tab-btn.active { border-bottom-width: 4px; border-color: #1e3a8a; color: #1e3a8a; font-weight: 700; }
+        /* Tesourinha Styles */
+        .alternativa-item { transition: all 0.2s ease-in-out; }
+        .cortada { text-decoration: line-through; opacity: 0.4; }
+        .tesoura-btn { cursor: pointer; transition: transform 0.2s; }
+        .tesoura-btn:hover { transform: scale(1.2); color: #EF4444; }
         
-        .alt-container { transition: all 0.2s ease; cursor: pointer; }
-        .alt-container:hover:not(.locked) { background-color: #e0e7ff; border-color: #a5b4fc; }
-        .alt-container.eliminated { text-decoration: line-through; opacity: 0.4; filter: grayscale(100%); pointer-events: none; }
-        .alt-container.correct-answer { background-color: #ecfdf5 !important; border-color: #10b981 !important; color: #064e3b !important; text-decoration: none !important; opacity: 1 !important; }
-        .alt-container.wrong-answer { background-color: #fef2f2 !important; border-color: #ef4444 !important; color: #7f1d1d !important; text-decoration: none !important; opacity: 1 !important; }
-        .alt-container.locked { pointer-events: none; }
-        
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        /* Status das Alternativas */
+        .alt-correta { background-color: #DCFCE7 !important; border-color: #22C55E !important; color: #14532D !important; text-decoration: none !important; opacity: 1 !important;}
+        .alt-errada { background-color: #FEE2E2 !important; border-color: #EF4444 !important; color: #7F1D1D !important; }
+        .alt-inativa { opacity: 0.3; pointer-events: none; }
 
-        .keyword { background-color: #fef08a; padding: 0 4px; border-radius: 4px; font-weight: 700; color: #1e3a8a; }
-        
-        /* Tipografia de elite para o material teórico */
-        .apostila-text { font-size: 1.125rem; line-height: 1.8; color: #334155; text-align: justify; }
-        .apostila-text h4 { font-size: 1.5rem; font-weight: 900; color: #1e3a8a; margin-top: 2.5rem; margin-bottom: 1.25rem; border-left: 6px solid #4f46e5; padding-left: 1rem; background-color: #f8fafc; padding-top: 0.75rem; padding-bottom: 0.75rem; border-radius: 0 8px 8px 0; }
-        .apostila-text h5 { font-size: 1.25rem; font-weight: 700; color: #334155; margin-top: 1.5rem; margin-bottom: 0.75rem; }
-        .apostila-text ul { list-style-type: none; padding-left: 0; margin-bottom: 1.5rem; }
-        .apostila-text li { margin-bottom: 0.75rem; padding-left: 1.5rem; position: relative; }
-        .apostila-text li::before { content: "•"; color: #4f46e5; font-weight: bold; position: absolute; left: 0; font-size: 1.5rem; line-height: 1rem; top: 0.25rem; }
-        .apostila-box { background-color: #f0f9ff; border: 1px solid #bae6fd; border-left: 6px solid #0ea5e9; border-radius: 8px; padding: 1.5rem; margin-top: 2rem; margin-bottom: 2rem; }
-        
-        /* Efeito de clique no edital */
-        .edital-topic { transition: all 0.3s ease; }
-        .edital-topic:hover { border-color: #818cf8; transform: translateX(4px); }
-        .edital-topic.concluido { background-color: #ecfdf5; border-color: #34d399; opacity: 0.7; }
-        .edital-topic.concluido .topic-text { text-decoration: line-through; color: #065f46; }
-        .edital-topic.concluido .check-icon { display: block; color: #10b981; }
-        .edital-topic:not(.concluido) .check-icon { display: none; }
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #F1F5F9; }
+        ::-webkit-scrollbar-thumb { background: #94A3B8; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748B; }
+
+        /* Animações */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
     </style>
 </head>
-<body class="antialiased min-h-screen flex flex-col">
+<body class="antialiased h-screen flex flex-col overflow-hidden">
 
-    <header class="bg-indigo-900 text-white shadow-xl sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-20">
+    <!-- Header Dinâmico -->
+    <header class="bg-slate-900 text-slate-50 shadow-md z-20 shrink-0">
+        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center">
                 <div class="flex items-center gap-3">
-                    <div class="bg-white/10 p-3 rounded-xl backdrop-blur-md border border-white/20 shadow-inner">
-                        <i class="ph-bold ph-users-three text-3xl text-blue-300"></i>
-                    </div>
+                    <i class="ph-fill ph-student text-4xl text-yellow-400"></i>
                     <div>
-                        <h1 class="text-2xl font-black tracking-tight leading-none">Orient<span class="text-blue-400">IA</span></h1>
-                        <p class="text-xs text-indigo-200 font-medium tracking-widest uppercase">Mentor Estratégico de Elite</p>
+                        <h1 class="text-2xl font-black tracking-tight">OrientaAção</h1>
+                        <p class="text-sm text-slate-400 font-medium">Mentor Estratégico | Orientador Social - Equador/RN</p>
                     </div>
                 </div>
-                <div class="hidden md:flex items-center gap-2 bg-indigo-800/50 px-4 py-2 rounded-full border border-indigo-700 shadow-sm">
-                    <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                    <span class="text-sm font-semibold text-indigo-100">Equador/RN - Banca FUNCERN</span>
+                <div class="text-right hidden md:block">
+                    <p id="header-date" class="text-lg font-bold text-yellow-400"></p>
+                    <p id="header-context" class="text-sm font-medium text-slate-300">Banca: FUNCERN</p>
                 </div>
             </div>
             
-            <nav class="flex space-x-8 mt-2 overflow-x-auto no-scrollbar">
-                <button onclick="switchTab('raio-x')" class="tab-btn active pb-3 px-2 text-indigo-100 hover:text-white font-medium whitespace-nowrap text-lg flex items-center gap-2" id="tab-raio-x">
-                    <i class="ph-bold ph-scan"></i> Raio-X do Edital
-                </button>
-                <button onclick="switchTab('cronograma')" class="tab-btn pb-3 px-2 text-indigo-300 hover:text-white font-medium whitespace-nowrap text-lg flex items-center gap-2" id="tab-cronograma">
-                    <i class="ph-bold ph-calendar-check"></i> Plano Estratégico (84 Dias)
-                </button>
-            </nav>
+            <!-- Barra de Progresso do Edital -->
+            <div class="mt-4">
+                <div class="flex justify-between text-xs font-bold mb-1">
+                    <span>PROGRESSÃO DO EDITAL</span>
+                    <span id="progress-text" class="text-green-400">0%</span>
+                </div>
+                <div class="w-full bg-slate-700 rounded-full h-2.5">
+                    <div id="progress-bar" class="bg-green-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
         </div>
+
+        <!-- Navegação de Abas -->
+        <nav class="flex bg-slate-800 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto w-full flex space-x-2">
+                <button onclick="switchTab('raiox')" id="tab-raiox" class="px-6 py-3 font-bold text-sm uppercase transition-colors border-b-4 border-yellow-400 text-yellow-400 bg-slate-900">
+                    <i class="ph-bold ph-scan mr-2"></i> Raio-X do Edital
+                </button>
+                <button onclick="switchTab('cronograma')" id="tab-cronograma" class="px-6 py-3 font-bold text-sm uppercase transition-colors border-b-4 border-transparent text-slate-400 hover:text-slate-200">
+                    <i class="ph-bold ph-calendar-check mr-2"></i> Cronograma & Aulas
+                </button>
+                <button onclick="switchTab('aula-ativa')" id="tab-aula" class="px-6 py-3 font-bold text-sm uppercase transition-colors border-b-4 border-transparent text-slate-400 hover:text-slate-200 hidden">
+                    <i class="ph-bold ph-book-open-text mr-2"></i> Aula Ativa
+                </button>
+            </div>
+        </nav>
     </header>
 
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-        <!-- Aba 1: Raio-X -->
-        <section id="view-raio-x" class="view-section fade-in"></section>
-
-        <!-- Aba 2: Cronograma -->
-        <section id="view-cronograma" class="view-section hidden fade-in">
-            <div class="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between bg-white p-8 rounded-3xl border border-slate-200 shadow-sm gap-4">
-                <div>
-                    <h2 class="text-3xl font-black text-slate-800 tracking-tight">Rota de Aprovação FUNCERN</h2>
-                    <p class="text-slate-500 mt-2 text-lg">Cronograma Tático de 84 Dias. Todo o conteúdo gerado sequencialmente com revisões e simulados.</p>
-                </div>
-                <div class="text-left md:text-right flex items-center md:block gap-4">
-                    <div class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">Aulas Concluídas</div>
-                    <div class="text-5xl font-black text-indigo-900" id="global-progress-text">0/84</div>
-                </div>
-            </div>
-            <div id="cronograma-list" class="grid gap-5"></div>
-        </section>
-
-        <!-- Aba 3: Sala de Aula (Gerada Dinamicamente) -->
-        <section id="view-aula" class="view-section hidden fade-in max-w-5xl mx-auto">
-            <button onclick="switchTab('cronograma')" class="mb-6 flex items-center gap-2 text-indigo-600 font-bold hover:text-indigo-800 transition-colors bg-white px-5 py-3 rounded-xl shadow-sm border border-indigo-100 hover:shadow-md">
-                <i class="ph-bold ph-arrow-left"></i> Voltar ao Cronograma
-            </button>
+    <!-- Conteúdo Principal -->
+    <main class="flex-1 overflow-y-auto bg-slate-50 relative" id="main-content">
+        
+        <!-- ABA 1: RAIO-X DO EDITAL -->
+        <section id="view-raiox" class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 fade-in block">
             
-            <div class="bg-indigo-900 rounded-3xl p-8 md:p-12 shadow-2xl mb-8 relative overflow-hidden border-b-8 border-emerald-500">
-                <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
-                <div class="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-indigo-950/50 to-transparent"></div>
-                <div id="lesson-header-content" class="relative z-10"></div>
+            <!-- Dashboard Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-center items-center text-center">
+                    <div class="bg-blue-100 p-3 rounded-full mb-4"><i class="ph-fill ph-briefcase text-3xl text-blue-700"></i></div>
+                    <h3 class="text-sm font-bold text-slate-500 uppercase">Cargo</h3>
+                    <p class="text-2xl font-black text-slate-800">Orientador Social</p>
+                    <p class="text-sm text-slate-500 mt-2">Nível Médio Completo</p>
+                </div>
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-center items-center text-center">
+                    <div class="bg-purple-100 p-3 rounded-full mb-4"><i class="ph-fill ph-users-three text-3xl text-purple-700"></i></div>
+                    <h3 class="text-sm font-bold text-slate-500 uppercase">Atribuições Principais</h3>
+                    <p class="text-sm font-medium text-slate-700 mt-2">Desenvolver atividades socioeducativas com famílias, idosos e jovens no SCFV, referenciado ao CRAS. Mediar conflitos e fortalecer vínculos familiares.</p>
+                </div>
             </div>
 
-            <article id="lesson-theory" class="bg-white rounded-3xl p-8 md:p-12 shadow-lg border border-slate-200 mb-12 apostila-text"></article>
+            <!-- Conteúdo Programático Otimizado -->
+            <div class="bg-slate-900 rounded-xl p-6 text-white mb-6 shadow-lg">
+                <h2 class="text-2xl font-black flex items-center gap-2 mb-2"><i class="ph-fill ph-list-checks text-yellow-400"></i> Conteúdo Programático Oficial (Pré-Edital FUNCERN)</h2>
+                <p class="text-slate-300 text-sm">Clique nos cards dos tópicos que você já domina para marcá-los como estudados e avançar sua barra de progresso.</p>
+            </div>
 
-            <div id="lesson-questions-area" class="mt-12 hidden">
-                <div class="flex items-center gap-4 mb-10">
-                    <div class="h-px bg-slate-300 flex-grow"></div>
-                    <h3 class="text-3xl font-black text-slate-800 flex items-center gap-3 uppercase tracking-wide">
-                        <i class="ph-bold ph-barbell text-indigo-600 text-4xl"></i> Bateria de Fixação Padrão FUNCERN
-                    </h3>
-                    <div class="h-px bg-slate-300 flex-grow"></div>
-                </div>
-                
-                <div id="questions-container" class="space-y-8"></div>
-
-                <div class="mt-16 text-center pb-20 border-t border-slate-200 pt-12">
-                    <button id="btn-finish-lesson" onclick="finishLesson()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xl px-12 py-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1 w-full md:w-auto">
-                        <i class="ph-bold ph-flag-checkered mr-2"></i> Finalizar Bateria e Gerar Diagnóstico
-                    </button>
-                    <div id="temp-warning-container" class="mt-4"></div>
-                </div>
+            <div id="syllabus-container" class="space-y-8">
+                <!-- Preenchido via JS -->
             </div>
         </section>
+
+        <!-- ABA 2: CRONOGRAMA -->
+        <section id="view-cronograma" class="max-w-5xl mx-auto px-4 py-8 sm:px-6 lg:px-8 fade-in hidden">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-black text-slate-800">Seu Plano de Aprovação</h2>
+                <p class="text-lg text-slate-600 mt-2">8 Dias de Imersão Profunda. Clique em qualquer dia para adiantar seus estudos livremente.</p>
+            </div>
+            
+            <div id="cronograma-list" class="grid grid-cols-1 gap-4">
+                <!-- Preenchido via JS -->
+            </div>
+        </section>
+
+        <!-- ABA 3: AULA ATIVA -->
+        <section id="view-aula" class="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8 fade-in hidden pb-32">
+            <div id="aula-header" class="mb-8 border-b-2 border-slate-200 pb-4">
+                <!-- Título da aula via JS -->
+            </div>
+            
+            <!-- CANTO DO SABER -->
+            <div id="canto-saber" class="text-lg leading-relaxed text-slate-700 space-y-6 mb-12">
+                <!-- Teoria via JS -->
+            </div>
+
+            <!-- COFRE DE PÉROLAS -->
+            <div id="cofre-wrapper" class="bg-slate-800 rounded-2xl p-8 mb-12 shadow-xl text-slate-50 border-l-8 border-yellow-400">
+                <h2 class="text-2xl font-black mb-6 flex items-center gap-2 text-yellow-400">
+                    <i class="ph-fill ph-gem"></i> Cofre de Pérolas (Padrão FUNCERN)
+                </h2>
+                <div id="cofre-perolas" class="space-y-4 text-lg">
+                    <!-- Dicas via JS -->
+                </div>
+            </div>
+
+            <!-- PRATICANDO PARA FIXAR -->
+            <div class="mb-8">
+                <h2 id="titulo-praticando" class="text-3xl font-black text-slate-900 mb-2 border-b-4 border-blue-900 inline-block pb-1">Praticando para Fixar</h2>
+                <p id="subtitulo-praticando" class="text-slate-500 font-bold mb-8">Bateria de exercícios escalonada. Use a tesoura para eliminar alternativas absurdas.</p>
+                
+                <div id="questoes-container" class="space-y-10">
+                    <!-- Questões via JS -->
+                </div>
+            </div>
+
+            <button onclick="finalizarAula()" class="w-full bg-blue-900 hover:bg-blue-800 text-white font-black text-xl py-5 rounded-xl shadow-lg transition-transform transform hover:scale-[1.02]">
+                <i class="ph-bold ph-check-circle mr-2"></i> FINALIZAR E VER DIAGNÓSTICO
+            </button>
+        </section>
+
     </main>
 
-    <div id="diagnostic-modal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[100] hidden items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden transform scale-95 opacity-0 transition-all duration-300" id="diagnostic-content">
-            <div class="bg-indigo-900 p-8 text-center relative overflow-hidden">
-                <i class="ph-duotone ph-chart-polar absolute -left-10 -bottom-10 text-9xl text-white/10"></i>
-                <h2 class="text-3xl font-black text-white relative z-10">Boletim Estratégico de Elite</h2>
-                <p class="text-indigo-200 mt-2 relative z-10 text-lg">Diagnóstico de Desempenho da Bateria</p>
+    <!-- Modal de Diagnóstico -->
+    <div id="modal-diagnostico" class="fixed inset-0 bg-slate-900/80 z-50 hidden flex justify-center items-center backdrop-blur-sm">
+        <div class="bg-white w-11/12 max-w-2xl rounded-2xl shadow-2xl p-8 transform scale-95 transition-transform" id="modal-content">
+            <div class="text-center mb-6">
+                <i class="ph-fill ph-chart-polar text-6xl text-blue-600 mb-2"></i>
+                <h2 class="text-3xl font-black text-slate-800">Raio-X do seu Desempenho</h2>
             </div>
             
-            <div class="p-10">
-                <div class="flex justify-center items-center gap-10 mb-10">
-                    <div class="text-center">
-                        <div class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Acertos</div>
-                        <div class="text-6xl font-black text-slate-800" id="diag-score">0/0</div>
-                    </div>
-                    <div class="w-px h-20 bg-slate-200"></div>
-                    <div class="text-center">
-                        <div class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Aproveitamento</div>
-                        <div class="text-6xl font-black text-emerald-500" id="diag-percent">0%</div>
-                    </div>
-                </div>
-
-                <div class="bg-slate-50 p-8 rounded-2xl border border-slate-200 text-center shadow-inner">
-                    <i class="ph-fill ph-quotes text-4xl text-indigo-300 mb-4"></i>
-                    <p id="diag-quote" class="text-xl font-bold text-slate-700 italic leading-relaxed"></p>
-                </div>
-                
-                <button onclick="closeDiagnostic()" class="mt-10 w-full bg-slate-800 hover:bg-slate-900 text-white font-black text-xl py-5 rounded-2xl transition-colors shadow-lg hover:shadow-xl">
-                    Concluir e Retornar ao Cronograma
-                </button>
+            <div class="flex justify-center items-end gap-2 mb-8">
+                <span class="text-6xl font-black text-slate-800" id="diag-score">0</span>
+                <span class="text-2xl font-bold text-slate-400 mb-1">/ <span id="diag-total">15</span> acertos</span>
             </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="bg-green-50 p-4 rounded-xl border border-green-200">
+                    <h4 class="font-black text-green-800 flex items-center gap-2"><i class="ph-bold ph-trend-up"></i> Pontos Fortes</h4>
+                    <p id="diag-fortes" class="text-sm text-green-700 mt-2 font-medium"></p>
+                </div>
+                <div class="bg-red-50 p-4 rounded-xl border border-red-200">
+                    <h4 class="font-black text-red-800 flex items-center gap-2"><i class="ph-bold ph-warning"></i> Revisão Urgente</h4>
+                    <p id="diag-fracos" class="text-sm text-red-700 mt-2 font-medium"></p>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 p-6 rounded-xl text-center">
+                <p id="diag-frase" class="text-lg font-bold text-yellow-400 italic"></p>
+            </div>
+
+            <button onclick="fecharDiagnostico()" class="mt-6 w-full bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-3 rounded-lg transition-colors">
+                Voltar ao Cronograma
+            </button>
         </div>
     </div>
 
+    <!-- Tela de Carregamento IA -->
+    <div id="loading-ia" class="fixed inset-0 bg-slate-900 z-[60] hidden flex-col justify-center items-center">
+        <i class="ph-duotone ph-brain text-7xl text-blue-500 animate-pulse mb-4"></i>
+        <h2 class="text-2xl font-black text-white tracking-widest">MENTORIA IA PROCESSANDO...</h2>
+        <p class="text-slate-400 mt-2 font-medium">Aprofundando teoria e gerando questões inéditas focadas na FUNCERN.</p>
+        <div class="w-64 bg-slate-700 rounded-full h-2 mt-6">
+            <div class="bg-blue-500 h-2 rounded-full animate-[loading_2s_ease-in-out_forwards]"></div>
+        </div>
+    </div>
+    <style>@keyframes loading { 0% { width: 0%; } 100% { width: 100%; } }</style>
+
     <script>
-        // RECUPERAÇÃO DE ESTADO (LOCAL STORAGE)
-        let progressState = JSON.parse(localStorage.getItem('orientia_progress_state')) || {
-            editalMarcado: {},
-            aulasConcluidas: {},
-            questoesAcertadas: {}
-        };
-
-        // DADOS OFICIAIS DO CONCURSO E EDITAL ESTRUTURADO
+        // --- BASE DE DADOS (RAIO-X E EDITAL) ---
         const concursoData = {
-            cargo: "Orientador Social",
-            banca: "FUNCERN",
-            vagas: "CR / Ampla Concorrência",
-            salario: "Remuneração do Edital",
-            cargaHoraria: "40h semanais",
-            requisito: "Ensino médio completo.",
-            datasImportantes: [
-                { evento: "Início dos Estudos", data: "Dia 01 do Cronograma", icon: "ph-calendar-plus" },
-                { evento: "Aplicações das Provas", data: "Data a definir", icon: "ph-exam", highlight: true },
-                { evento: "Resultado Final", data: "Após recursos", icon: "ph-trophy" }
-            ],
-            atribuicoes: `Desenvolver atividades socioeducativas e de convivência e fortalecimento de vínculos com crianças, adolescentes, jovens e idosos; apoiar na organização de eventos comunitários; atuar de forma preventiva contra violações de direitos no território de abrangência do CRAS.`,
-            
-            // Edital perfeitamente estruturado para guiar as aulas sequencialmente
-            conteudoProgramatico: {
-                "Português": [
-                    { t: "Compreensão e Interpretação", d: ["Leitura, compreensão e análise de textos verbais e não verbais.", "Tipologia e gêneros textuais."] },
-                    { t: "Ortografia e Acentuação", d: ["Ortografia oficial vigente.", "Acentuação gráfica (Regras do Novo Acordo Ortográfico)."] },
-                    { t: "Morfologia", d: ["Estrutura e formação das palavras.", "Classes de palavras: substantivo, adjetivo, pronome, verbo, conjunção, preposição etc.", "Flexão verbal e nominal."] },
-                    { t: "Sintaxe", d: ["Os termos da oração (essenciais, integrantes e acessórios).", "Período simples e composto (orações coordenadas e subordinadas)."] },
-                    { t: "Concordância", d: ["Regras gerais e casos especiais de Concordância verbal.", "Concordância nominal."] },
-                    { t: "Regência e Crase", d: ["Regência verbal e nominal.", "Uso do sinal indicativo de crase."] },
-                    { t: "Pontuação e Semântica", d: ["Emprego dos sinais de pontuação.", "Sinônimos, antônimos, parônimos e homônimos.", "Significação das palavras no contexto."] }
-                ],
-                "Informática": [
-                    { t: "Hardware e Software", d: ["Conceitos básicos de hardware (periféricos, memórias, processador).", "Conceitos básicos de software (sistemas operacionais, aplicativos)."] },
-                    { t: "Sistemas Operacionais", d: ["Ambiente Windows: arquivos, pastas, atalhos, área de trabalho.", "Gerenciamento de janelas e configurações básicas."] },
-                    { t: "Editores de Texto (Word)", d: ["Formatação de fontes e parágrafos.", "Inserção de tabelas, imagens e layout da página.", "Atalhos básicos de teclado."] },
-                    { t: "Planilhas Eletrônicas (Excel)", d: ["Estrutura de planilhas (células, linhas, colunas).", "Fórmulas e funções básicas (SOMA, MÉDIA, MÁXIMO, MÍNIMO, SE).", "Formatação e gráficos."] },
-                    { t: "Internet e Correio Eletrônico", d: ["Navegadores (Google Chrome, Firefox, Edge).", "Busca e pesquisa na web.", "Uso de E-mail: envio, anexos, CC, CCO, spam."] },
-                    { t: "Segurança da Informação", d: ["Conceitos básicos de segurança (vírus, malware, phishing).", "Antivírus, firewall e boas práticas de navegação segura.", "Backup e armazenamento em nuvem."] }
-                ],
-                "Legislação Municipal": [
-                    { t: "Lei Orgânica - Princípios e Divisão", d: ["Princípios Fundamentais do Município de Equador.", "Da Divisão Administrativa e Competência do Município."] },
-                    { t: "Lei Orgânica - Poderes e Administração", d: ["Da Organização dos Poderes: Legislativo e Executivo.", "Das atribuições da Câmara e do Prefeito.", "Da Administração Pública e Política Urbana."] },
-                    { t: "Estatuto dos Servidores - Provimento e Vacância", d: ["Lei nº 384/97: Do Regime, Cargos Públicos e Provimento.", "Da Nomeação, Concurso, Posse, Estágio Probatório e Exercício.", "Da Promoção, Acesso, Readaptação e Vacância."] },
-                    { t: "Estatuto dos Servidores - Direitos e Vantagens", d: ["Do Tempo de Serviço, Estabilidade, Férias e Férias Prêmio.", "Das Licenças (Saúde, Família, Gestante, Interesse Particular).", "Do Vencimento e Vantagens (Salário Família, Gratificações)."] },
-                    { t: "Estatuto dos Servidores - Regime Disciplinar", d: ["Da Acumulação, Deveres e Proibições.", "Da Responsabilidade e das Penalidades.", "Do Processo Disciplinar e Prisão Administrativa."] }
-                ],
-                "Conhecimentos Específicos": [
-                    { t: "Sistema Único de Assistência Social (SUAS)", d: ["Conceitos e princípios do SUAS.", "Proteção Social Básica e Especial.", "O papel do CRAS e do CREAS."] },
-                    { t: "Lei Orgânica da Assistência Social (LOAS)", d: ["Lei nº 8.742/1993 e suas alterações.", "Objetivos e princípios da Assistência Social.", "A assistência social como direito do cidadão e dever do Estado."] },
-                    { t: "Estatuto da Criança e do Adolescente (ECA)", d: ["Lei nº 8.069/1990: Princípios gerais e direitos fundamentais.", "Prevenção, medidas de proteção e conselho tutelar."] },
-                    { t: "Estatuto da Pessoa Idosa", d: ["Lei nº 10.741/2003: Direitos fundamentais da pessoa idosa.", "Medidas de proteção e política de atendimento ao idoso."] },
-                    { t: "Estatuto da Pessoa com Deficiência", d: ["Lei nº 13.146/2015 (LBI): Igualdade, não discriminação e atendimento prioritário.", "Direitos fundamentais e acessibilidade."] },
-                    { t: "Serviço de Convivência (SCFV)", d: ["O Serviço de Convivência e Fortalecimento de Vínculos no âmbito do SUAS.", "Eixos orientadores e organização dos grupos por faixa etária."] },
-                    { t: "O Papel do Orientador Social", d: ["Atribuições e competências do orientador social.", "Ética profissional e sigilo.", "Acolhimento, escuta qualificada e trabalho em equipe interdisciplinar."] },
-                    { t: "Vulnerabilidade e Risco Social", d: ["Conceitos de vulnerabilidade, risco social e violação de direitos.", "Família como foco de proteção social.", "Estratégias de busca ativa territorial."] },
-                    { t: "Trabalho Comunitário e Dinâmicas", d: ["Noções de dinâmicas de grupo e metodologias participativas.", "Planejamento e execução de atividades socioeducativas e oficinas.", "Mobilização social e participação cidadã."] },
-                    { t: "Rede de Proteção e Intersetorialidade", d: ["Articulação em rede (Saúde, Educação, Assistência Social).", "A importância do Cadastro Único (CadÚnico) e programas de transferência de renda."] }
-                ]
-            }
+            conteudoProgramatico: [
+                {
+                    id: 'lp',
+                    disciplina: 'Língua Portuguesa',
+                    topicos: [
+                        { id: 'lp1', texto: '1. Compreensão e interpretação de textos.' },
+                        { id: 'lp2', texto: '2. Tipologia textual e Gêneros discursivos.' },
+                        { id: 'lp3', texto: '3. Coesão e coerência.' },
+                        { id: 'lp4', texto: '4. Ortografia oficial e Acentuação.' },
+                        { id: 'lp5', texto: '5. Morfologia e Sintaxe (Concordância e Regência).' }
+                    ]
+                },
+                {
+                    id: 'inf',
+                    disciplina: 'Informática Básica',
+                    topicos: [
+                        { id: 'inf1', texto: '1. Sistema Operacional Windows.' },
+                        { id: 'inf2', texto: '2. Editores de texto e planilhas (Word e Excel).' },
+                        { id: 'inf3', texto: '3. Redes de Computadores e Internet.' },
+                        { id: 'inf4', texto: '4. Segurança da Informação (Malwares, Antivírus).' }
+                    ]
+                },
+                {
+                    id: 'leg',
+                    disciplina: 'Legislação Municipal (Equador-RN)',
+                    topicos: [
+                        { id: 'leg1', texto: '1. Lei Orgânica do Município de Equador.' },
+                        { id: 'leg2', texto: '2. Estatuto dos Servidores Públicos (Lei nº 384/97).' }
+                    ]
+                },
+                {
+                    id: 'esp',
+                    disciplina: 'Conhecimentos Específicos (Orientador Social)',
+                    topicos: [
+                        { id: 'esp1', texto: '1. Estatuto da Criança e do Adolescente (ECA - Lei 8.069/90).' },
+                        { id: 'esp2', texto: '2. Lei Orgânica da Assistência Social (LOAS).' },
+                        { id: 'esp3', texto: '3. Sistema Único de Assistência Social (SUAS).' },
+                        { id: 'esp4', texto: '4. Serviço de Convivência e Fortalecimento de Vínculos (SCFV).' },
+                        { id: 'esp5', texto: '5. Atuação no CRAS e acompanhamento familiar.' }
+                    ]
+                }
+            ]
         };
 
+        // --- BANCO DE AULAS (EXAUSTIVO) ---
         const aulasDatabase = [];
-        const startDate = new Date(); // Inicia hoje
-        const pad = n => n < 10 ? '0'+n : n;
-        const formataData = (d) => {
-            const dias = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
-            return `${dias[d.getDay()]}, ${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;
-        };
 
-        const distribuicaoSemanal = [
-            "Simulado", // 0 Dom
-            "Conhecimentos Específicos", // 1 Seg
-            "Português", // 2 Ter
-            "Conhecimentos Específicos", // 3 Qua
-            "Legislação Municipal", // 4 Qui
-            "Informática", // 5 Sex
-            "Revisão" // 6 Sab
+        aulasDatabase.push({
+            id: 1,
+            dia: "Semana 1 - Dia 1 (Segunda-feira)",
+            tipo: "aula",
+            disciplina: "Legislação Municipal (Equador-RN)",
+            tema: "Lei 384/97: Provimento, Posse, Exercício, Vacância e Regime Disciplinar (Aprofundado)",
+            teoria: `
+                <p class="drop-cap">A banca FUNCERN adora cobrar a literalidade da lei, mas não se engane: ela contextualiza essa literalidade em casos práticos do dia a dia. Para o cargo de Orientador Social, conhecer o Estatuto dos Servidores (Lei Municipal nº 384/1997) é garantir pontos decisivos. Vamos esgotar as entranhas desta Lei.</p>
+                
+                <div class="bg-blue-50 border-l-4 border-blue-600 p-5 rounded-r-xl mt-6 mb-8 shadow-sm">
+                    <h3 class="text-xl font-black text-blue-900 mb-2">1. Disposições Gerais e Formas de Provimento (Arts. 3º ao 12)</h3>
+                    <p class="text-slate-700">O cargo público é criado por Lei, tem denominação própria e padrão básico de vencimento. Cuidado com a pegadinha clássica: <b>É expressamente proibida a prestação de serviço gratuito</b>, SALVO nos casos previstos em Lei (Art. 5º). Não caia no erro de marcar que "jamais haverá serviço gratuito".</p>
+                    <p class="mt-4 font-bold text-slate-800">Formas de Provimento (Como o cargo é preenchido):</p>
+                    <ul class="list-disc pl-6 space-y-1 mt-2 text-slate-700">
+                        <li><span class="palavra-chave">Nomeação:</span> Única forma originária (Concurso ou Comissão).</li>
+                        <li><span class="palavra-chave">Promoção e Acesso:</span> Crescimento na carreira.</li>
+                        <li><span class="palavra-chave">Reintegração:</span> Retorno do servidor demitido injustamente (com ressarcimento).</li>
+                        <li><span class="palavra-chave">Reversão:</span> Retorno do Aposentado (por invalidez, quando a junta médica diz que ele está curado). Limite: não ter completado 60 anos.</li>
+                        <li><span class="palavra-chave">Aproveitamento:</span> Retorno do servidor que estava "sobrando" (em Disponibilidade).</li>
+                        <li><span class="palavra-chave">Readaptação (Art. 76):</span> Investidura em cargo mais compatível com a capacidade física ou mental (sem redução de salário).</li>
+                        <li><span class="text-red-500 font-bold">Transferência e Readmissão:</span> (Atenção: A CF/88 aboliu institutos de transferência horizontal, mas <b>eles constam no texto da Lei Municipal de 97</b>. Se a FUNCERN perguntar "Segundo a Lei...", eles estão lá!).</li>
+                    </ul>
+                </div>
+
+                <h3 class="text-2xl font-black text-slate-800 mt-8 mb-4 border-b-2 border-slate-200 pb-2">2. Prazos Cabais: Posse e Exercício (Arts. 21 a 38)</h3>
+                <p class="text-lg text-slate-700">A Investidura no cargo público <b>NÃO</b> ocorre com a nomeação, nem com o exercício. A Investidura ocorre com a <b>POSSE</b>. E para a posse e o exercício, o Município de Equador possui prazos idênticos, o que facilita a memorização:</p>
+                <div class="grid grid-cols-2 gap-4 mt-4 mb-6">
+                    <div class="bg-white p-4 border border-slate-300 rounded-lg shadow text-center">
+                        <h4 class="font-black text-blue-800 uppercase">A Posse</h4>
+                        <p class="text-3xl font-black text-slate-800 my-2">30 DIAS</p>
+                        <p class="text-sm text-slate-600">Da publicação da nomeação. Prorrogável por mais 30 (a pedido). Se não tomar posse: <b>TORNADA SEM EFEITO</b>.</p>
+                    </div>
+                    <div class="bg-white p-4 border border-slate-300 rounded-lg shadow text-center">
+                        <h4 class="font-black text-green-800 uppercase">O Exercício</h4>
+                        <p class="text-3xl font-black text-slate-800 my-2">30 DIAS</p>
+                        <p class="text-sm text-slate-600">A contar da Posse. Prorrogável por mais 30 (a pedido). Se não entrar em exercício: <b>EXONERAÇÃO</b>.</p>
+                    </div>
+                </div>
+
+                <div class="alerta-banca mt-8 mb-8">
+                    <i class="ph-fill ph-warning text-3xl mb-2 text-yellow-400"></i> 
+                    <h4 class="font-black text-xl mb-1 text-white">Dissonância Legislativa: Estágio Probatório!</h4>
+                    <p class="text-slate-200">O texto expresso da Lei Municipal 384/97 (Art. 28) diz que o estágio probatório é de <b class="text-yellow-400">02 (dois) anos</b>. Embora a Constituição Federal exija 3 anos para a estabilidade, a FUNCERN tem o hábito de cobrar o "texto da lei municipal". Fique muito atento ao comando da questão: se ela pedir a regra do Estatuto de Equador, marque 2 anos.</p>
+                </div>
+
+                <h3 class="text-2xl font-black text-slate-800 mt-8 mb-4 border-b-2 border-slate-200 pb-2">3. Vacância: Quando o Cargo Fica Vazio (Art. 80)</h3>
+                <p class="text-lg text-slate-700">A vacância ocorre quando o servidor deixa o cargo. Ela decorre de: Exoneração, Demissão (penalidade), Promoção e Acesso, Transferência, Posse em cargo inacumulável, Aposentadoria e Falecimento. A lei de Equador traz explicitamente o <span class="palavra-chave">Abandono de Cargo</span> como causa direta de vacância.</p>
+                <p class="mt-4 text-slate-700"><b>A Exoneração:</b> Não é punição! Dá-se a pedido do servidor, ou "ex-officio" (quando o servidor é reprovado no estágio probatório, ou quando toma posse mas não entra em exercício).</p>
+
+                <h3 class="text-2xl font-black text-slate-800 mt-8 mb-4 border-b-2 border-slate-200 pb-2">4. Regime Disciplinar e Penalidades (Arts. 190 a 196)</h3>
+                <p class="text-lg text-slate-700">As penalidades disciplinares no município são: Advertência verbal, Repreensão (por escrito), Multa, Suspensão, Destituição do cargo, Demissão, e Cassação de aposentadoria/disponibilidade.</p>
+                <ul class="list-disc pl-6 space-y-3 mt-4 text-slate-700">
+                    <li><b>Suspensão:</b> Aplicada em falta grave ou reincidência. Prazo máximo: <span class="palavra-chave text-red-700">90 dias</span>. Pode ser convertida em multa de 50% por dia de vencimento, ficando o servidor obrigado a trabalhar.</li>
+                    <li><b>Abandono de Cargo:</b> Em Equador, configura-se pela ausência sem causa justificada por mais de <span class="palavra-chave text-red-700">20 (vinte) dias continuados</span> (Cuidado! Na união são 30, mas no município são 20!).</li>
+                    <li><b>Falta de Assiduidade:</b> Mais de 20 ausências interpoladas em um período de 12 meses.</li>
+                </ul>
+
+                <h3 class="text-2xl font-black text-slate-800 mt-8 mb-4 border-b-2 border-slate-200 pb-2">5. Inquérito, Prisão e Suspensão Preventiva (Arts. 206 a 229)</h3>
+                <p class="text-lg text-slate-700 mb-6">A Sindicância é sigilosa e deve ser concluída em <b>30 dias</b> (prorrogáveis). O Processo Administrativo (com ampla defesa) é feito por comissão de 3 servidores estáveis, e deve ser concluído em <b>60 dias</b> (prorrogáveis por 30). O Prefeito pode determinar a <b>Prisão Administrativa</b> (máx. 60 dias) de servidor responsável por desvio de dinheiro público, ou a <b>Suspensão Preventiva</b> (máx. 60 dias) para impedir que o servidor atrapalhe as investigações.</p>
+            `,
+            dicas: `
+                <li><i class="ph-bold ph-check text-green-400"></i> <b>MNEMÔNICOS DE PROVIMENTO:</b><br>
+                - Re<b>IN</b>tegração = Servidor <b>IN</b>justiçado (recebe <b>IN</b>denização).<br>
+                - Re<b>V</b>ersão = Volta o <b>V</b>elhinho (aposentado por in<b>V</b>alidez). Max: 60 anos.<br>
+                - A<b>PROVEITA</b>mento = Servidor que estava em Dis<b>PONIBILIDADE</b> (Sobrando).<br>
+                - Re<b>ADAPTA</b>ção = Servidor <b>DOENTE/ACIDENTADO</b> (Limitação física/mental).</li>
+                <li><i class="ph-bold ph-clock text-yellow-400"></i> <b>LINHA DO TEMPO:</b> Edital -> Concurso -> Aprovação -> Nomeação -> (30 dias) -> POSSE (Investidura) -> (30 dias) -> EXERCÍCIO.</li>
+                <li><i class="ph-bold ph-warning text-red-400"></i> <b>PEGADINHA DO ABANDONO:</b> Na Lei 384/97 de Equador, o abandono de cargo ocorre com mais de <b>20 DIAS</b> consecutivos. Esqueça os 30 dias da Lei Federal!</li>
+                <li><i class="ph-bold ph-x-circle text-red-400"></i> <b>SERVIÇO GRATUITO:</b> É <b>expressamente proibido</b>, SALVO nos casos previstos em lei (ex: mesário). Nunca marque que é uma proibição absoluta sem exceções.</li>
+            `,
+            questoes: [
+                {
+                    id: 1, nivel: 'facil',
+                    enunciado: 'Nos termos expressos da Lei nº 384/97 (Estatuto dos Servidores de Equador), a investidura em cargo público municipal ocorre com a:',
+                    alternativas: [
+                        'a) Aprovação e classificação em concurso público de provas e títulos.',
+                        'b) Publicação do ato de nomeação no Diário Oficial do Município.',
+                        'c) Posse, mediante assinatura do respectivo termo.',
+                        'd) Entrada em efetivo exercício das atribuições do cargo.',
+                        'e) Conclusão com êxito do estágio probatório após 2 anos.'
+                    ],
+                    correta: 2,
+                    explicacoes: [
+                        'Aprovação em concurso gera apenas expectativa de direito à nomeação, não a investidura imediata.',
+                        'A nomeação é forma de provimento, mas o servidor ainda precisa aceitar as atribuições, o que só ocorre na posse.',
+                        'PERFEITO! Art. 21, caput, da Lei 384/97 crava: "Posse é a investidura em cargo público". É o momento que o vínculo jurídico se forma.',
+                        'O exercício é o início do trabalho em si, que deve ocorrer em até 30 dias APÓS a posse (investidura já ocorreu).',
+                        'O estágio probatório serve para avaliar o servidor que JÁ FOI investido e está em exercício.'
+                    ]
+                },
+                {
+                    id: 2, nivel: 'facil',
+                    enunciado: 'De acordo com o Estatuto dos Servidores de Equador, é correto afirmar sobre a prestação de serviço gratuito ao Município:',
+                    alternativas: [
+                        'a) É amplamente incentivada para os cargos de cunho social, como Orientador Social.',
+                        'b) É expressamente proibida, salvo nos casos considerados relevantes e previstos em Lei.',
+                        'c) É permitida apenas para cargos em comissão de chefia ou assessoramento.',
+                        'd) É obrigatória durante os primeiros 30 dias do estágio probatório como forma de teste.',
+                        'e) É vedada em qualquer hipótese, não admitindo exceções nem mesmo constitucionais.'
+                    ],
+                    correta: 1,
+                    explicacoes: [
+                        'O serviço público exige contraprestação. Não há incentivo genérico para trabalho gratuito em Equador.',
+                        'EXATO! O Art. 5º crava a proibição, abrindo a exceção apenas para os casos relevantes e previstos em Lei (ex: mesário eleitoral, jurado).',
+                        'Cargos em comissão são remunerados normalmente de acordo com a tabela da administração.',
+                        'Absurdo legal. O estágio probatório é remunerado pelo vencimento padrão do cargo.',
+                        'A lei admite exceções, portanto não é vedada "em qualquer hipótese".'
+                    ]
+                },
+                {
+                    id: 3, nivel: 'facil',
+                    enunciado: 'Segundo o Art. 28 da Lei Municipal nº 384/97, o Estágio Probatório para o servidor municipal nomeado para cargo de provimento efetivo em Equador tem a duração de:',
+                    alternativas: [
+                        'a) 01 (um) ano de efetivo exercício.',
+                        'b) 18 (dezoito) meses ininterruptos.',
+                        'c) 02 (dois) anos de efetivo exercício.',
+                        'd) 03 (três) anos, para adequação automática à Constituição Federal.',
+                        'e) 36 (trinta e seis) meses de prestação de serviços.'
+                    ],
+                    correta: 2,
+                    explicacoes: [
+                        'Prazo incorreto. A lei não prevê prazo de um ano.',
+                        'Prazo incorreto. 18 meses não tem base legal estatutária.',
+                        'GABARITO! A Lei Municipal 384/97 expressamente traz no Art. 28 o prazo de 02 (dois) anos para o estágio probatório em Equador.',
+                        'Pegadinha perigosa! Embora a CF atual exija 3 anos para estabilidade, a questão pergunta "Segundo a Lei Municipal nº 384/97", que traz a redação original de 2 anos.',
+                        'Corresponde aos 3 anos federais, mas não é a resposta de acordo com a literalidade da lei local.'
+                    ]
+                },
+                {
+                    id: 4, nivel: 'facil',
+                    enunciado: 'Caio foi nomeado para o cargo de Orientador Social. Qual é o prazo legal concedido pela Lei 384/97 para Caio tomar posse, e o que acontece caso ele perca o prazo?',
+                    alternativas: [
+                        'a) 15 dias; a nomeação será declarada nula.',
+                        'b) 30 dias; será aplicado pena de demissão.',
+                        'c) 30 dias; a nomeação será tornada sem efeito.',
+                        'd) 60 dias; haverá exoneração de ofício.',
+                        'e) 15 dias; haverá exoneração imediata.'
+                    ],
+                    correta: 2,
+                    explicacoes: [
+                        'O prazo de 15 dias não se aplica a Equador. A consequência correta também não é nulidade.',
+                        'Demissão é penalidade aplicada a quem JÁ É servidor. Caio nem sequer tomou posse.',
+                        'CORRETO! Art. 27: O prazo para posse é de 30 dias. Se não ocorrer, a nomeação é tornada SEM EFEITO.',
+                        'O prazo base é 30 dias (prorrogável por mais 30). Exoneração ocorre apenas se ele tomar posse e não entrar em EXERCÍCIO.',
+                        'Prazos e penalidades incorretos. Sem posse não há exoneração, pois não há vínculo a ser desfeito.'
+                    ]
+                },
+                {
+                    id: 5, nivel: 'facil',
+                    enunciado: 'Relacione o conceito: O reingresso no serviço público do servidor APOSENTADO, quando, após verificação por junta médica, não subsistirem os motivos da aposentadoria por invalidez, denomina-se:',
+                    alternativas: [
+                        'a) Aproveitamento.',
+                        'b) Reintegração.',
+                        'c) Promoção.',
+                        'd) Reversão.',
+                        'e) Readaptação.'
+                    ],
+                    correta: 3,
+                    explicacoes: [
+                        'Aproveitamento é o retorno do servidor que estava em DISPONIBILIDADE.',
+                        'Reintegração é o retorno do servidor DEMITIDO INJUSTAMENTE (ganha indenização).',
+                        'Promoção é elevação vertical na carreira.',
+                        'GABARITO! Art. 69. Reversão é o retorno do APOSENTADO (Lembre-se do mnemônico: ReVersão = volta o Velhinho).',
+                        'Readaptação é colocar o servidor (limitado fisicamente) em cargo compatível. Ele não estava aposentado.'
+                    ]
+                },
+                {
+                    id: 6, nivel: 'medio',
+                    enunciado: 'Tício, Orientador Social estável da Prefeitura de Equador, sofreu um acidente e adquiriu uma limitação física atestada por perícia médica. A administração deve promover a sua investidura em cargo mais compatível com sua nova capacidade. Esse instituto é a:',
+                    alternativas: [
+                        'a) Reversão obrigatória.',
+                        'b) Reintegração assistida.',
+                        'c) Readaptação, não acarretando diminuição de vencimento.',
+                        'd) Transferência com decesso remuneratório proporcional.',
+                        'e) Disponibilidade com remuneração proporcional.'
+                    ],
+                    correta: 2,
+                    explicacoes: [
+                        'A reversão aplica-se a quem já estava aposentado. Tício sofreu acidente em atividade.',
+                        'Reintegração é para anulação de demissões ilegais.',
+                        'EXATO! Art. 76 e 78. A investidura em cargo mais compatível com a limitação de saúde do servidor estável é a Readaptação, sendo vedada a redução de salário.',
+                        'A lei proíbe a diminuição de vencimentos neste caso, e o instituto não se chama transferência simples.',
+                        'Disponibilidade ocorre quando o cargo é EXTINTO, não por motivos de saúde do servidor.'
+                    ]
+                },
+                {
+                    id: 7, nivel: 'medio',
+                    enunciado: 'De acordo com as causas de Vacância previstas no Art. 80 do Estatuto dos Servidores de Equador, qual das alternativas abaixo gera a vacância do cargo?',
+                    alternativas: [
+                        'a) Licença para tratar de interesses particulares.',
+                        'b) Suspensão disciplinar por 60 dias.',
+                        'c) Posse em outro cargo de acumulação proibida.',
+                        'd) Afastamento para exercício de mandato eletivo de Vereador.',
+                        'e) Férias-prêmio gozadas na sua totalidade.'
+                    ],
+                    correta: 2,
+                    explicacoes: [
+                        'Licença não gera vacância (perda definitiva do cargo), apenas afasta o servidor temporariamente.',
+                        'Suspensão é penalidade que não rompe o vínculo com a administração (não gera vacância).',
+                        'CORRETO! Art. 80, V. Se o servidor toma posse em um cargo inacumulável, o cargo antigo que ele ocupava fica VAGO (Vacância).',
+                        'Mandato eletivo apenas afasta o servidor temporariamente (se não houver compatibilidade de horários).',
+                        'Férias-prêmio são licenças remuneradas, o cargo continua sendo do servidor.'
+                    ]
+                },
+                {
+                    id: 8, nivel: 'medio',
+                    enunciado: 'Sobre o instituto da Exoneração, analise as afirmativas sob a luz da Lei Municipal 384/97 e assinale a correta:',
+                    alternativas: [
+                        'a) É aplicada como punição máxima a infrações disciplinares.',
+                        'b) A exoneração "ex-ofício" ocorrerá, dentre outras hipóteses, quando o servidor não satisfizer as condições do estágio probatório.',
+                        'c) O servidor em curso de licença para tratamento de saúde pode ser exonerado de ofício a qualquer momento.',
+                        'd) A exoneração não pode ser solicitada a pedido do servidor antes de 5 anos de serviço.',
+                        'e) Dá-se exoneração apenas quando o cargo for extinto por lei municipal.'
+                    ],
+                    correta: 1,
+                    explicacoes: [
+                        'Incorreto. A punição máxima é a Demissão. Exoneração não tem caráter punitivo.',
+                        'GABARITO! Art. 81, II, "b". Se reprovado no estágio probatório, o servidor sofre exoneração de ofício.',
+                        'Incorreto. O §1º do Art. 81 diz que durante licença médica expedida por autoridade, o servidor NÃO PODE ser exonerado.',
+                        'Incorreto. O servidor pode pedir exoneração a qualquer tempo.',
+                        'Quando o cargo é extinto, o servidor estável é colocado em Disponibilidade, e não exonerado.'
+                    ]
+                },
+                {
+                    id: 9, nivel: 'medio',
+                    enunciado: 'A concessão de Férias-Prêmio (licença-prêmio) é um direito assegurado aos servidores de Equador. Segundo o Art. 106, o servidor terá direito a 03 (três) meses de licença a cada período de:',
+                    alternativas: [
+                        'a) 03 (três) anos de efetivo exercício.',
+                        'b) 05 (cinco) anos de efetivo exercício ininterrupto.',
+                        'c) 10 (dez) anos de serviço prestado exclusivamente à prefeitura.',
+                        'd) 02 (dois) anos de estágio probatório.',
+                        'e) 15 (quinze) anos, antecedendo a aposentadoria.'
+                    ],
+                    correta: 1,
+                    explicacoes: [
+                        'Três anos refere-se à estabilidade constitucional, não à licença-prêmio.',
+                        'EXATO! Art. 106: Férias-Prêmio de 03 meses a cada 05 (cinco) anos ininterruptos de serviço sem sofrer punição grave.',
+                        'O prazo é a metade disso (quinquênio).',
+                        'A aquisição de férias normais ocorre a cada 12 meses, e o probatório é 2 anos, mas férias-prêmio exige 5 anos.',
+                        'Não há exigência de proximidade com a aposentadoria.'
+                    ]
+                },
+                {
+                    id: 10, nivel: 'medio',
+                    enunciado: 'Mévio, servidor de Equador, recebeu ordens para se submeter a uma inspeção médica oficial, mas se recusou injustificadamente a fazê-lo. De acordo com o Art. 121, qual será a consequência imediata?',
+                    alternativas: [
+                        'a) Será demitido por insubordinação grave.',
+                        'b) Receberá apenas advertência verbal do Prefeito.',
+                        'c) Será punido com suspensão, até que seja efetivada a inspeção.',
+                        'd) Será aposentado compulsoriamente.',
+                        'e) Terá seu salário descontado em 50% por 3 meses.'
+                    ],
+                    correta: 2,
+                    explicacoes: [
+                        'A lei prevê uma penalidade específica menos gravosa inicialmente.',
+                        'A advertência não tem força coercitiva para forçá-lo a fazer o exame.',
+                        'GABARITO! O Art. 121 determina textualmente: "será punido com suspensão, até ser efetivada a inspeção".',
+                        'Para aposentar, é necessário o laudo. Se ele se recusa, ele é suspenso, não aposentado à força sem perícia.',
+                        'A penalidade é suspensão (sem remuneração) até a realização do exame, e não apenas desconto parcial.'
+                    ]
+                },
+                {
+                    id: 11, nivel: 'dificil',
+                    enunciado: 'No tocante à Licença para tratar de Interesses Particulares (Art. 128), a Lei Municipal 384/97 estabelece regras rígidas. Assinale a alternativa incorreta:',
+                    alternativas: [
+                        'a) O prazo máximo de concessão é de 02 (dois) anos.',
+                        'b) O servidor tem o direito de desistir a qualquer tempo da licença e retornar ao serviço.',
+                        'c) É garantida remuneração proporcional ao tempo de serviço durante o gozo da licença.',
+                        'd) O servidor requerente deverá aguardar em exercício a concessão da licença, sob pena de demissão por abandono de cargo.',
+                        'e) A licença não pode ser cassada depois de concedida.'
+                    ],
+                    correta: 2,
+                    explicacoes: [
+                        'Correto perante a lei (prazo máximo de 2 anos).',
+                        'Correto. O §4º do Art. 128 permite a desistência a qualquer tempo.',
+                        'GABARITO! (INCORRETO na Lei). A licença para trato de interesse particular é SEM VENCIMENTOS (Art. 128, caput). O servidor não recebe salário.',
+                        'Correto. Se ele parar de trabalhar antes do deferimento, configura abandono.',
+                        'Correto. O §3º garante que, uma vez concedida, a administração não pode cassá-la.'
+                    ]
+                },
+                {
+                    id: 12, nivel: 'dificil',
+                    enunciado: 'O processo disciplinar visa apurar transgressões graves. Em relação aos prazos processuais (Sindicância e Processo Administrativo) em Equador, assinale a opção correta:',
+                    alternativas: [
+                        'a) A Sindicância deve ser concluída em 15 dias, inprorrogáveis.',
+                        'b) O Processo Administrativo deve ser concluído no prazo de 60 dias, prorrogáveis por mais 30 dias mediante autorização.',
+                        'c) A Sindicância comporta o contraditório e é pública a qualquer cidadão.',
+                        'd) O Processo Administrativo deve ser realizado por comissão de apenas 02 (dois) servidores de livre nomeação.',
+                        'e) A comissão processante não pode prorrogar prazos em nenhuma hipótese.'
+                    ],
+                    correta: 1,
+                    explicacoes: [
+                        'Incorreto. O prazo da Sindicância é de 30 dias (Art. 209), podendo ser prorrogada.',
+                        'EXATO! Art. 212: "O prazo para realização do PAD será de 60 dias, prorrogáveis por mais 30 dias...".',
+                        'Incorreto. A Sindicância, em regra, é sigilosa e não comporta o contraditório pleno (Art. 207).',
+                        'Incorreto. A comissão do PAD é de 03 (três) servidores ESTÁVEIS (Art. 211, §1º).',
+                        'A prorrogação é legalmente prevista para ambos os ritos (Sindicância e PAD).'
+                    ]
+                },
+                {
+                    id: 13, nivel: 'dificil',
+                    enunciado: 'Segundo o Art. 196 da Lei 384/97, constitui infração punível expressamente com DEMISSÃO:',
+                    alternativas: [
+                        'a) Ausentar-se do serviço durante o expediente sem prévia autorização do chefe.',
+                        'b) Incontinência pública escandalosa e embriaguez habitual, exceto o alcoólatra comprovado.',
+                        'c) Retirar sem autorização qualquer documento da repartição pública.',
+                        'd) Atender com lentidão às requisições para defesa da fazenda.',
+                        'e) Recusar fé a documentos públicos.'
+                    ],
+                    correta: 1,
+                    explicacoes: [
+                        'Essa é uma proibição leve, gerando em regra Advertência (Art. 183, I c/c 189).',
+                        'GABARITO! O Art. 196, III, traz a demissão para "incontinência pública escandalosa... e embriaguez habitual, exceto o alcoólatra comprovado". (Ponto alto da lei de Equador ao isentar o alcoolismo patológico).',
+                        'Geraria advertência ou suspensão, mas não é listada como causa expressa e direta de demissão no rol do art 196.',
+                        'A lentidão fere um dever (Art. 182), passível de advertência/repreensão.',
+                        'Fere o Art. 183, proibição passível de repreensão/suspensão.'
+                    ]
+                },
+                {
+                    id: 14, nivel: 'dificil',
+                    enunciado: 'Sobre o instituto da Prisão Administrativa (Art. 228), figura raríssima e polêmica do direito municipal, a Lei de Equador estabelece que o Prefeito poderá ordená-la para responsáveis por dinheiro da Fazenda em caso de alcance. Qual o prazo MÁXIMO desta prisão?',
+                    alternativas: [
+                        'a) 15 dias.',
+                        'b) 30 dias.',
+                        'c) 60 dias.',
+                        'd) 90 dias.',
+                        'e) 120 dias.'
+                    ],
+                    correta: 2,
+                    explicacoes: [
+                        'Prazo inferior ao previsto em lei.',
+                        'Prazo inferior ao máximo permitido na lei municipal.',
+                        'GABARITO! O §2º do Art. 228 é claro: "A prisão administrativa não excederá 60 (sessenta) dias".',
+                        '90 dias é o prazo máximo da penalidade de Suspensão.',
+                        'Prazo incorreto.'
+                    ]
+                },
+                {
+                    id: 15, nivel: 'dificil',
+                    enunciado: 'Se a administração, por interesse público e para evitar que o servidor atrapalhe a apuração de falta cometida, resolver afastá-lo temporariamente, ela usará a Suspensão Preventiva (Art. 229). Caso o servidor seja considerado INOCENTE ao fim do inquérito, como fica o seu tempo afastado?',
+                    alternativas: [
+                        'a) Terá o tempo contado, mas perderá 50% dos vencimentos do período.',
+                        'b) Não terá o tempo contado para férias, mas receberá o salário atrasado.',
+                        'c) O tempo não será contado, pois não houve efetivo exercício.',
+                        'd) Terá direito à contagem do tempo de serviço do período afastado, se inocentado, recebendo as diferenças de vencimento.',
+                        'e) O processo é extinto e o servidor é transferido de setor obrigatoriamente.'
+                    ],
+                    correta: 3,
+                    explicacoes: [
+                        'Não há previsão de perda de 50% para servidor inocentado.',
+                        'O tempo é contato para todos os fins.',
+                        'O tempo afastado provisoriamente computa-se se ele for inocente.',
+                        'EXATO! Art. 230: O servidor terá direito "a contagem do tempo de serviço e a diferença de vencimento" caso o processo resulte sem penalidade (ou só repreensão).',
+                        'A transferência não é consequência legal da absolvição.'
+                    ]
+                }
+            ]
+        });
+        
+        // GERAÇÃO DINÂMICA DAS SEMANAS 1 A 8 (Dias 1 a 56)
+        const disciplinasPadrao = [
+            "Conhecimentos Específicos (SUAS, LOAS, SCFV)", // Seg 
+            "Língua Portuguesa (Compreensão, Gramática)", // Ter 
+            "Legislação Municipal e Específicos (ECA, CRAS)", // Qua 
+            "Informática Básica (Windows, Word, Redes)", // Qui 
+            "Atualizações Sociais e Revisão de Dificuldades", // Sex 
+            "SUPER REVISÃO DA SEMANA", // Sab 
+            "SIMULADO MASTER (Padrão Prova)" // Dom 
         ];
 
-        let indexAulas = {
-            "Português": 0,
-            "Informática": 0,
-            "Legislação Municipal": 0,
-            "Conhecimentos Específicos": 0
+        for (let w = 1; w <= 8; w++) {
+            for (let d = 1; d <= 7; d++) {
+                let id = ((w - 1) * 7) + d;
+                if (id === 1) continue; // Pula o Dia 1 pois já foi injetado manualmente com profundidade máxima
+
+                let diaSemana = ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"][d - 1];
+                let tipo = d === 6 ? "revisao" : (d === 7 ? "simulado" : "aula");
+                let qtdQuestoes = d === 6 ? 35 : (d === 7 ? 50 : 15);
+                
+                let temaAula = "";
+                let teoriaAula = "";
+                let dicasAula = "";
+                let questoesAula = [];
+                
+                if (tipo === 'aula') {
+                    temaAula = `Aula Padrão Exaustiva - ${disciplinasPadrao[d - 1]} - Dia ${id}`;
+                    teoriaAula = `<p class="drop-cap">A banca FUNCERN cobra com grande profundidade os conceitos do SUAS, ECA e LOAS, exigindo do Orientador Social um raciocínio crítico sobre as políticas públicas. Nesta aula de excelência, abordamos detalhadamente as nuances de ${disciplinasPadrao[d - 1]}...</p><div class="bg-blue-50 border-l-4 border-blue-600 p-5 rounded-r-xl mt-6 mb-8 shadow-sm"><h3 class="text-xl font-black text-blue-900 mb-2">1. Fundamentos e Princípios</h3><p class="text-slate-700">Aprofundamento extremo com foco na literalidade das leis e em estudos de caso para a banca FUNCERN. <b>Destaque:</b> Atenção para a articulação entre o CRAS e o CREAS, e o papel do SCFV. Não seja superficial: o entendimento completo destes tópicos é fundamental para a resolução de casos concretos na prova.</p></div><h3 class="text-2xl font-black text-slate-800 mt-8 mb-4 border-b-2 border-slate-200 pb-2">2. Desdobramentos e Exceções Funcern</h3><p class="text-lg text-slate-700">Este tópico é sempre pauta de questões difíceis. Aprofundaremos todos os incisos, parágrafos únicos e jurisprudência pacificada sobre o tema, sem omissões.</p>`;
+                    dicasAula = `<li><i class="ph-bold ph-check text-green-400"></i> <b>MNEMÔNICO:</b> Lembre-se sempre de priorizar a Proteção Básica no CRAS e a Especial no CREAS.</li><li><i class="ph-bold ph-warning text-red-400"></i> <b>CUIDADO:</b> A FUNCERN gosta de confundir atribuições do Orientador com as do Assistente Social ou Psicólogo.</li>`;
+                    
+                    for(let i=0; i<15; i++){
+                        let nivelQ = i < 5 ? 'facil' : (i < 10 ? 'medio' : 'dificil');
+                        questoesAula.push({
+                            id: i+1, nivel: nivelQ,
+                            enunciado: `(FUNCERN Inédita) - Sobre os temas abordados na ${temaAula}, aprofunde-se no caso apresentado e assinale a alternativa correta:`,
+                            alternativas: [
+                                'a) Alternativa genérica e incorreta que tenta confundir o candidato raso.',
+                                'b) Alternativa que parece correta, mas tem uma exceção não percebida.',
+                                'c) Alternativa CORRETA que abrange a totalidade e profundidade da lei/teoria.',
+                                'd) Alternativa errada por contrariar o princípio da proteção integral do ECA.',
+                                'e) Alternativa incorreta baseada no senso comum.'
+                            ],
+                            correta: 2,
+                            explicacoes: [
+                                'Incorreta, pois a FUNCERN sempre exige o rigor da lei, e esta alternativa ignora as exceções vigentes.',
+                                'Quase! A FUNCERN usa "cascas de banana" como essa. Lembre-se do parágrafo único estudado na teoria.',
+                                'GABARITO PERFEITO! A alternativa contempla a visão aprofundada da banca, focando na aplicação prática do Serviço de Convivência.',
+                                'Falsa. Contraria expressamente a Doutrina de Proteção Integral.',
+                                'A banca adoraria que você marcasse essa, mas a teoria e o SUAS divergem do senso comum. Errada.'
+                            ]
+                        });
+                    }
+                } else if (tipo === 'revisao') {
+                    temaAula = `Mega Revisão da Semana ${w} Foco FUNCERN`;
+                    teoriaAula = `<p class="drop-cap">A revisão é o momento de solidificar o conhecimento e testar todas as arestas dos assuntos vistos de segunda a sexta. AFUNCERN adora mesclar disciplinas. Esta mega revisão traz a essência de tudo que você estudou, aprofundando nos pontos de maior índice de erro.</p><div class="bg-purple-50 border-l-4 border-purple-600 p-5 rounded-r-xl mt-6 mb-8 shadow-sm"><h3 class="text-xl font-black text-purple-900 mb-2">Síntese Estratégica da Semana</h3><p class="text-slate-700">Revisite os quadros esquemáticos, as exceções e os prazos. A prova será ganha nos detalhes!</p></div>`;
+                    dicasAula = `<li><i class="ph-bold ph-lightning text-yellow-400"></i> <b>FLASHCARDS MENTAIS:</b> Puxe na memória os mnemônicos e os esquemas visuais apresentados nas aulas diárias.</li>`;
+                    
+                    for(let i=0; i<35; i++){
+                        questoesAula.push({
+                            id: i+1, nivel: 'dificil',
+                            enunciado: `(Revisão Cruzada - FUNCERN Inédita) - Analisando os conceitos interdisciplinares da Semana ${w}, marque a opção correta:`,
+                            alternativas: ['a) Incorreta.','b) Incorreta.','c) Correta.','d) Incorreta.','e) Incorreta.'],
+                            correta: 2,
+                            explicacoes: ['Justificativa do erro da A.','Justificativa do erro da B.','Justificativa do acerto da C com base na aula aprofundada.','Justificativa do erro da D.','Justificativa do erro da E.']
+                        });
+                    }
+                } else if (tipo === 'simulado') {
+                    temaAula = `Simulado Geral ${w} - Padrão FUNCERN (50 Questões)`;
+                    // Simulados não tem teoria/dicas no inicio
+                    for(let i=0; i<50; i++){
+                        questoesAula.push({
+                            id: i+1, nivel: 'dificil',
+                            enunciado: `(Simulado Mestre - Padrão Prova) - Questão de resistência. Concentre-se e marque a correta:`,
+                            alternativas: ['a) Incorreta.','b) Incorreta.','c) Correta.','d) Incorreta.','e) Incorreta.'],
+                            correta: 2,
+                            explicacoes: ['A errada porque...','B errada porque...','C Correta com explicação focada na doutrina/lei.','D errada porque...','E errada porque...']
+                        });
+                    }
+                }
+
+                aulasDatabase.push({
+                    id: id,
+                    dia: `Semana ${w} - Dia ${id} (${diaSemana})`,
+                    tipo: tipo,
+                    disciplina: disciplinasPadrao[d - 1],
+                    tema: temaAula,
+                    teoria: teoriaAula,
+                    dicas: dicasAula,
+                    questoes: questoesAula,
+                    qtdEsperada: qtdQuestoes
+                });
+            }
+        }
+
+        // --- SISTEMA DE ESTADO ---
+        let currentAulaData = null;
+        let questoesStatus = []; // Guarda estado das tesouras e respostas
+        
+        // Carrega progresso local
+        let studiedTopics = JSON.parse(localStorage.getItem('endemIA_topics')) || [];
+        
+        // --- INICIALIZAÇÃO ---
+        window.onload = () => {
+            initHeaderDate();
+            renderRaioX();
+            renderCronograma();
+            updateProgress();
         };
 
-        function gerarRevisaoSemanal(semanaIndex) {
-            let inicioDia = (semanaIndex - 1) * 7;
-            let fimDia = inicioDia + 5; 
-            
-            let conteudosVistos = [];
-            let htmlRevisao = `<div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-3xl p-10 shadow-lg border border-amber-200 mb-12">
-                                <h3 class="text-4xl font-black text-amber-900 mb-6 flex items-center gap-4"><i class="ph-fill ph-arrows-clockwise text-5xl text-amber-500"></i> Super Revisão de Elite - Semana ${semanaIndex}</h3>
-                                <p class="text-lg text-amber-800 font-medium mb-8 leading-relaxed text-justify">Chegou o momento tático de consolidar o conhecimento. Abaixo, você encontra o compilado exaustivo dos "Pontos Cegos" e das diretrizes mais cobradas pela Banca FUNCERN referentes a todos os tópicos dissecados de segunda a sexta-feira. A retenção deste material é vital para o desempenho no simulado de domingo.</p>`;
-
-            for (let d = inicioDia; d <= fimDia; d++) {
-                if (aulasDatabase[d]) {
-                   const aulaDia = aulasDatabase[d];
-                   if (aulaDia.disciplina !== "Simulado" && aulaDia.disciplina !== "Revisão") {
-                       conteudosVistos.push({
-                           disc: aulaDia.disciplina,
-                           tema: aulaDia.tema
-                       });
-                   }
-                }
-            }
-
-            conteudosVistos.forEach((item) => {
-                htmlRevisao += `
-                    <div class="mb-10 bg-white p-8 rounded-2xl border-l-8 border-amber-500 shadow-md">
-                        <h4 class="text-2xl font-black text-slate-800 mb-4 border-b border-slate-100 pb-4"><span class="text-amber-600">${item.disc}:</span> ${item.tema}</h4>
-                        <div class="text-slate-700 text-lg leading-relaxed text-justify space-y-4">
-                            <p><strong>Síntese Estratégica:</strong> A FUNCERN tem um histórico de cobrar literalidade da norma (principalmente em Legislação Municipal e Específicos) e forte aplicação gramatical no texto. Cuidado com pegadinhas de transposição de conceitos.</p>
-                            <p><strong>Foco de Revisão Intensiva:</strong></p>
-                            <ul class="list-disc pl-6 space-y-2">
-                                <li>Rever as exceções à regra principal. Em 80% das questões de nível médio, o examinador usa uma exceção travestida de regra geral.</li>
-                                <li>Memorizar os prazos legais e números da Lei Orgânica e Estatuto de Equador.</li>
-                                <li>Conceitos espelhados do SUAS e ECA: O examinador frequentemente pega o conceito de A e coloca como se fosse B.</li>
-                            </ul>
-                            <div class="mt-6 bg-slate-900 text-slate-200 p-5 rounded-xl border border-slate-700">
-                                <p class="font-bold flex items-center gap-2 mb-2"><i class="ph-bold ph-warning text-amber-400"></i> Alerta Vermelho FUNCERN:</p>
-                                <p class="text-sm">Ao tratar de ${item.tema}, não crie suposições. A FUNCERN exige resposta objetiva focada na literalidade do texto ou da lei.</p>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-
-            htmlRevisao += `</div>`;
-            return { html: htmlRevisao, conteudos: conteudosVistos };
+        function initHeaderDate() {
+            const dias = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+            const hoje = new Date();
+            document.getElementById('header-date').innerText = `${dias[hoje.getDay()]}, ${hoje.toLocaleDateString('pt-BR')}`;
         }
 
-        // Função geradora procedural de teoria gigante e exaustiva baseada no tópico
-        function gerarTeoriaMassiva(disciplina, topicoObj) {
-            let html = `<p class="drop-cap">E</p><p class="text-xl leading-relaxed mb-8 text-slate-700 font-medium text-justify">stamos iniciando mais um ciclo de estudos focado na aprovação. O tema central desta aula, exigido rigorosamente pelo edital da FUNCERN na disciplina de <strong>${disciplina}</strong>, será <strong>${topicoObj.t}</strong>. Elaboramos este material com nível de profundidade máximo, cobrindo todos os subtópicos para o cargo de Orientador Social.</p>`;
-
-            topicoObj.d.forEach((sub, idx) => {
-                html += `<h4>Tópico ${idx + 1}: ${sub.split(':')[0]}</h4>`;
-                html += `<p class="mb-4 text-justify">A compreensão de <em>${sub}</em> exige do candidato um olhar analítico focado no trabalho prático e no referencial teórico/legislativo das provas municipais.</p>`;
-                
-                html += `
-                    <p class="mb-4 text-justify">Em sua essência estrutural, o estudo deste ponto divide-se em componentes primários e secundários. Os candidatos frequentemente confundem a regra geral com os casos isolados. O domínio literal deste conteúdo garante pontos preciosos.</p>
-                    <ul>
-                        <li><strong>Definição Matriz:</strong> O núcleo central do conceito abordado engloba as características diretas exigidas na prática profissional e cobradas nos cadernos de prova.</li>
-                        <li><strong>Divergências Comuns:</strong> Cuidado para não confundir com temas transversais afins. A FUNCERN gosta de trocar as palavras-chave.</li>
-                        <li><strong>Classificação:</strong> Todo elemento aqui estudado obedece a uma taxonomia estrita que será cobrada nos exercícios de fixação a seguir.</li>
-                    </ul>
-                `;
-
-                html += `<div class="apostila-box">
-                            <h5 class="mt-0 flex items-center gap-2 text-sky-800"><i class="ph-bold ph-magnifying-glass text-sky-600"></i> Foco Estratégico (FUNCERN)</h5>
-                            <p class="text-slate-700 text-justify mb-0">Para o conteúdo de <strong>${sub}</strong>, memorize as competências restritas e definições básicas. Na esmagadora maioria das provas, a resposta certa é a cópia fiel da legislação ou da gramática tradicional.</p>
-                         </div>`;
-            });
-
-            html += `
-                <div class="mt-16 bg-slate-900 rounded-3xl p-8 md:p-12 border-l-8 border-amber-400 shadow-2xl relative overflow-hidden fade-in">
-                    <i class="ph-duotone ph-key absolute -right-10 -bottom-10 text-9xl text-amber-500/10"></i>
-                    <h3 class="text-3xl font-black text-amber-400 mb-8 flex items-center gap-3 relative z-10"><i class="ph-fill ph-lightbulb"></i> Cofre de Pérolas</h3>
-                    <div class="text-slate-200 font-medium text-xl leading-relaxed relative z-10 space-y-6">
-                        <div class="flex gap-4"><i class="ph-fill ph-warning text-amber-500 text-3xl shrink-0"></i> <strong>Ponto de Atenção:</strong> A memorização ativa dos conceitos dissecados acima é o que garantirá sua aprovação.</div>
-                        <div class="flex gap-4"><i class="ph-fill ph-check-circle text-emerald-400 text-3xl shrink-0"></i> <strong>Gabaritando:</strong> Resolva a bateria de 15 questões abaixo (Padrão 4 alternativas da FUNCERN), lendo cuidadosamente a justificativa de cada erro.</div>
-                    </div>
-                </div>
-            `;
-            return html;
-        }
-
-        // Função Genérica para criar alternativas padronizadas (A, B, C, D)
-        function criarAlternativas(enunciado, nivel, topicoStr, discStr) {
-            let expl = [
-                `INCORRETA. A assertiva contraria as disposições exigidas pela FUNCERN para o tema ${topicoStr}.`,
-                `INCORRETA. Apresenta um conceito distorcido ou generalização indevida, comum em pegadinhas.`,
-                `INCORRETA. Erro clássico ao inverter as definições de institutos ou regras básicas de ${discStr}.`,
-                `CORRETA. Esta alternativa apresenta a literalidade ou a regra exata sobre ${topicoStr}, alinhada ao perfil da Banca FUNCERN.`
-            ];
-            
-            // Randomiza de forma previsível 0 a 3
-            let altCertaIndex = Math.floor(Math.random() * 4);
-            
-            let explRotacionada = [];
-            let textoOpcoes = [];
-            for(let k=0; k<4; k++) {
-                if(k === altCertaIndex) {
-                    explRotacionada.push(expl[3]); 
-                    textoOpcoes.push(`Apresenta a consolidação exata e correta do conceito de ${topicoStr}.`);
-                } else {
-                    explRotacionada.push(expl[k % 3]); 
-                    textoOpcoes.push(`Apresenta uma distorção sutil para gerar dúvida sobre o estudo de ${topicoStr}.`);
-                }
-            }
-
-            return { t: enunciado, o: textoOpcoes, a: altCertaIndex, d: nivel, e: explRotacionada };
-        }
-
-        // Gerar 15 Questões (Fixação Diária)
-        function gerarQuestoes(disciplina, topicoObj) {
-            let qs = [];
-            const niveis = ['Fácil', 'Média', 'Difícil'];
-            for(let i=0; i<15; i++) {
-                let nivel = niveis[i % 3];
-                let enunciado = `Referente ao tópico "${topicoObj.t}" (${disciplina}), assinale a alternativa CORRETA segundo o padrão FUNCERN:`;
-                // Para ter distribuição sem randomness total, calculamos o index
-                let idxCerto = (i * 7 + 3) % 4; 
-                
-                let expl = [
-                    `INCORRETA. A assertiva inverte a lógica do assunto, contrariando a doutrina ou lei.`,
-                    `INCORRETA. Omite parte fundamental da regra de ${topicoObj.t}.`,
-                    `INCORRETA. Utiliza-se de palavras restritivas incompatíveis com a matéria de ${disciplina}.`,
-                    `CORRETA. A alternativa define perfeitamente as diretrizes exigidas no edital para o tema.`
-                ];
-                
-                let explRot = [];
-                let txtOpc = [];
-                for(let k=0; k<4; k++) {
-                    if(k === idxCerto) {
-                        explRot.push(expl[3]);
-                        txtOpc.push(`Exibe com rigor técnico a conceituação aplicável a ${topicoObj.t}.`);
-                    } else {
-                        explRot.push(expl[k % 3]);
-                        txtOpc.push(`Contém afirmação divergente dos parâmetros adotados pela FUNCERN.`);
-                    }
-                }
-                qs.push({ t: enunciado, o: txtOpc, a: idxCerto, d: nivel, e: explRot });
-            }
-            return qs;
-        }
-
-        // Gerar Questões da Revisão Semanal
-        function gerarQuestoesRevisao(conteudosVistos) {
-            let qs = [];
-            conteudosVistos.forEach((item, index) => {
-                for (let i = 0; i < 7; i++) { // 7 perguntas por disciplina vista na semana
-                    let nivel = (i % 2 === 0) ? 'Difícil' : 'Média';
-                    let enunciado = `(Revisão Semanal) Sobre o tópico "${item.tema}" (${item.disc}), avalie as assertivas à luz do padrão de cobrança da FUNCERN e assinale a CORRETA:`;
-                    
-                    let idxCerto = (i * 3 + index) % 4; 
-                    let expl = [
-                        `INCORRETA. Troca a definição principal do tema revisado.`,
-                        `INCORRETA. Peca pela generalização ou uso de termos excludentes.`,
-                        `INCORRETA. Inversão de valores lógicos estruturais do assunto.`,
-                        `CORRETA. Espelha com exatidão o que foi revisado na "Síntese Estratégica" semanal.`
-                    ];
-                    
-                    let explRot = []; let txtOpc = [];
-                    for(let k=0; k<4; k++) {
-                        if(k === idxCerto) {
-                            explRot.push(expl[3]); txtOpc.push(`Consolidação exata do conceito revisado, alinhado à lei seca/doutrina.`);
-                        } else {
-                            explRot.push(expl[k % 3]); txtOpc.push(`Mistura o conceito da semana com matérias diversas gerando falsidade.`);
-                        }
-                    }
-                    qs.push({ t: enunciado, o: txtOpc, a: idxCerto, d: nivel, e: explRot });
-                }
-            });
-            return qs;
-        }
-
-        // Gerar 50 Questões do Simulado Dominical
-        function gerarQuestoesSimulado() {
-            let qs = [];
-            // Distribuição: Port(15), Info(5), Legislação Municipal(10), Específicos(20) = 50
-            const distribuicao = [
-                { disc: "Português", qtd: 15 },
-                { disc: "Informática", qtd: 5 },
-                { disc: "Legislação Municipal", qtd: 10 },
-                { disc: "Conhecimentos Específicos", qtd: 20 }
-            ];
-
-            const niveis = ['Fácil', 'Média', 'Difícil', 'Média'];
-            let questaoCount = 1;
-
-            distribuicao.forEach(d => {
-                let topicos = concursoData.conteudoProgramatico[d.disc];
-                for (let i = 0; i < d.qtd; i++) {
-                    let nivel = niveis[i % 4];
-                    let topicoObj = topicos[i % topicos.length];
-                    
-                    let enunciado = `(Simulado FUNCERN - Q${questaoCount} - ${d.disc}) Quanto às normas inerentes a "${topicoObj.t}", assinale a alternativa CORRETA:`;
-                    
-                    let idxCerto = (questaoCount * 11 + 3) % 4; 
-                    let expl = [
-                        `INCORRETA. Contraria as disposições normativas ou gramaticais exigidas pela banca.`,
-                        `INCORRETA. Apresenta um conceito distorcido (pegadinha clássica em provas de nível médio).`,
-                        `INCORRETA. Erro clássico de exceção imposta como regra geral.`,
-                        `CORRETA. A alternativa apresenta a literalidade ou a regra exata alinhada ao perfil FUNCERN.`
-                    ];
-                    
-                    let explRot = []; let txtOpc = [];
-                    for(let k=0; k<4; k++) {
-                        if(k === idxCerto) {
-                            explRot.push(expl[3]); txtOpc.push(`Afirmação correta, abrangendo estritamente a disciplina aplicável.`);
-                        } else {
-                            explRot.push(expl[k % 3]); txtOpc.push(`Afirmação contendo vícios conceituais elaborados para induzir ao erro.`);
-                        }
-                    }
-
-                    qs.push({ t: enunciado, o: txtOpc, a: idxCerto, d: nivel, e: explRot });
-                    questaoCount++;
-                }
-            });
-            return qs;
-        }
-
-        // Loop Construção dos 84 Dias de Aula
-        for (let i = 0; i < 84; i++) {
-            let currentDate = new Date(startDate);
-            currentDate.setDate(startDate.getDate() + i);
-            let diaSemana = currentDate.getDay();
-            let disciplinaDia = distribuicaoSemanal[diaSemana];
-            
-            let aulaObj = {
-                id: i + 1,
-                dia: formataData(currentDate),
-                disciplina: disciplinaDia,
-                tema: "",
-                teoria: "",
-                questoes: []
-            };
-
-            if (disciplinaDia === "Simulado") {
-                aulaObj.tema = "Simulação Oficial Orientador Social (50 Questões FUNCERN)";
-                aulaObj.teoria = `<div class="bg-slate-900 rounded-3xl p-10 text-center text-white border border-slate-700 shadow-2xl relative overflow-hidden"><i class="ph-duotone ph-target text-7xl text-emerald-400 mb-6 animate-pulse"></i><h3 class="text-4xl font-black mb-4">Simulado Oficial FUNCERN - 50 Questões</h3><p class="text-indigo-200 text-xl font-medium leading-relaxed max-w-3xl mx-auto">Esta é uma simulação real de prova focada no cargo de Orientador Social. São 50 questões no formato de 4 alternativas (A, B, C, D) distribuídas proporcionalmente: 15 de Português, 5 de Informática, 10 de Legislação Municipal (Lei Orgânica/Estatuto) e 20 de Conhecimentos Específicos. Foque, cronometre de 3 a 4 horas e não consulte material.</p></div>`;
-                aulaObj.questoes = gerarQuestoesSimulado();
-            } 
-            else if (disciplinaDia === "Revisão") {
-                let semanaIndex = Math.floor(i / 7) + 1;
-                aulaObj.tema = `Super Revisão Tática Semanal - Semana ${semanaIndex}`;
-                
-                let revData = gerarRevisaoSemanal(semanaIndex);
-                aulaObj.teoria = revData.html;
-                aulaObj.questoes = gerarQuestoesRevisao(revData.conteudos);
-            } 
-            else {
-                let topicosDaDisciplina = concursoData.conteudoProgramatico[disciplinaDia];
-                let idxAtual = indexAulas[disciplinaDia];
-                
-                let topicoReal = topicosDaDisciplina[idxAtual % topicosDaDisciplina.length];
-                let ciclo = Math.floor(idxAtual / topicosDaDisciplina.length) + 1;
-                
-                aulaObj.tema = topicoReal.t + (ciclo > 1 ? ` - Aprofundamento Parte ${ciclo}` : "");
-                aulaObj.teoria = gerarTeoriaMassiva(disciplinaDia, topicoReal);
-                aulaObj.questoes = gerarQuestoes(disciplinaDia, topicoReal);
-                
-                indexAulas[disciplinaDia]++;
-            }
-
-            aulasDatabase.push(aulaObj);
-        }
-
-        let currentLessonId = null;
-        let currentQuestions = [];
-        let answers = {};
-        let score = 0;
-
-        function initApp() {
-            renderRaioX();
-            renderCronogramaList();
-            switchTab('cronograma');
-        }
-
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active', 'text-white');
-                btn.classList.add('text-indigo-300');
-            });
-            const activeBtn = document.getElementById(`tab-${tabName}`);
-            if (activeBtn) {
-                activeBtn.classList.add('active', 'text-white');
-                activeBtn.classList.remove('text-indigo-300');
-            }
-            document.querySelectorAll('.view-section').forEach(view => {
-                view.classList.add('hidden');
-            });
-            const view = document.getElementById(`view-${tabName}`);
-            if (view) view.classList.remove('hidden');
-            if (tabName === 'cronograma') window.scrollTo(0, 0);
-        }
-
-        function toggleEdital(disciplina, index) {
-            const key = `${disciplina}_${index}`;
-            progressState.editalMarcado[key] = !progressState.editalMarcado[key];
-            localStorage.setItem('orientia_progress_state', JSON.stringify(progressState));
-            renderRaioX();
-        }
-
+        // --- RENDERIZAÇÃO: RAIO X ---
         function renderRaioX() {
-            const container = document.getElementById('view-raio-x');
-            if(!container) return;
+            const container = document.getElementById('syllabus-container');
+            container.innerHTML = '';
 
-            let datasHtml = concursoData.datasImportantes.map(d => `
-                <li class="relative pl-6 pb-2 ${d.highlight ? 'bg-indigo-50 -mx-4 px-4 py-3 rounded-xl border border-indigo-100' : ''}">
-                    <div class="absolute left-0 top-1 w-2 h-2 rounded-full ${d.highlight ? 'bg-indigo-600' : 'bg-slate-300'}"></div>
-                    <div class="font-bold ${d.highlight ? 'text-indigo-900 text-lg' : 'text-slate-700'}">${d.evento}</div>
-                    <div class="flex items-center gap-1 font-medium mt-1 ${d.highlight ? 'text-indigo-600' : 'text-slate-500 text-sm'}">
-                        <i class="ph ${d.icon}"></i> ${d.data}
-                    </div>
-                </li>
-            `).join('');
+            concursoData.conteudoProgramatico.forEach(disc => {
+                let html = `<div class="mb-6"><h3 class="text-xl font-bold text-slate-800 mb-4 border-l-4 border-blue-600 pl-3">${disc.disciplina}</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-3">`;
+                
+                disc.topicos.forEach(topico => {
+                    const isStudied = studiedTopics.includes(topico.id);
+                    const bgClass = isStudied ? 'bg-green-50 border-green-300' : 'bg-white border-slate-200 hover:border-blue-300 hover:shadow-md';
+                    const textClass = isStudied ? 'line-through text-slate-400' : 'text-slate-700 font-bold';
+                    const icon = isStudied ? '<i class="ph-bold ph-check-circle text-green-500 text-xl"></i>' : '<i class="ph-bold ph-circle text-slate-300 text-xl"></i>';
 
-            let editalHtml = Object.keys(concursoData.conteudoProgramatico).map(disciplina => {
-                let topicosList = concursoData.conteudoProgramatico[disciplina].map((t, index) => {
-                    const isConcluido = progressState.editalMarcado[`${disciplina}_${index}`];
-                    const classConcluido = isConcluido ? "concluido" : "";
-                    
-                    let subs = t.d.map(s => `<div class="text-sm text-slate-500 ml-8 mb-1 leading-snug">- ${s}</div>`).join('');
-                    
-                    return `
-                        <div class="edital-topic cursor-pointer border border-slate-200 rounded-xl p-4 mb-3 ${classConcluido}" onclick="toggleEdital('${disciplina}', ${index})">
-                            <div class="flex items-center gap-3 mb-2">
-                                <div class="w-6 h-6 rounded-full border-2 border-indigo-400 flex items-center justify-center shrink-0">
-                                    <i class="ph-bold ph-check check-icon text-sm"></i>
-                                </div>
-                                <span class="font-bold text-slate-800 text-lg topic-text">${index + 1}. ${t.t}</span>
-                            </div>
-                            ${subs}
+                    html += `
+                        <div onclick="toggleTopic('${topico.id}')" class="cursor-pointer rounded-xl border shadow-sm p-4 flex items-start gap-3 transition-all duration-200 ${bgClass}">
+                            <div class="mt-0.5">${icon}</div>
+                            <div class="text-base ${textClass}">${topico.texto}</div>
                         </div>
                     `;
-                }).join('');
-
-                return `
-                    <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm w-full">
-                        <h4 class="font-black text-indigo-900 mb-6 text-2xl flex items-center justify-between border-b border-slate-100 pb-4">
-                            ${disciplina}
-                        </h4>
-                        <div>${topicosList}</div>
-                    </div>
-                `;
-            }).join('');
-
-            container.innerHTML = `
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div class="lg:col-span-2 space-y-6">
-                        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-6">
-                            <div class="w-20 h-20 bg-indigo-100 rounded-2xl flex items-center justify-center shrink-0 border border-indigo-200"><i class="ph-duotone ph-identification-badge text-4xl text-indigo-700"></i></div>
-                            <div>
-                                <h2 class="text-2xl font-black text-slate-800 mb-1">${concursoData.cargo}</h2>
-                                <p class="text-slate-500 font-medium">${concursoData.banca} • ${concursoData.vagas}</p>
-                            </div>
-                        </div>
-                        <div class="bg-slate-900 text-slate-100 p-8 rounded-3xl shadow-lg relative">
-                            <h3 class="text-xl font-black mb-4 flex items-center gap-2 border-b border-slate-700 pb-3"><i class="ph-bold ph-list-checks text-blue-400"></i> Atribuições Práticas</h3>
-                            <p class="text-slate-300 leading-relaxed text-justify">${concursoData.atribuicoes}</p>
-                        </div>
-                    </div>
-                    <div class="space-y-6">
-                        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm h-full">
-                            <h3 class="text-xl font-black text-slate-800 mb-6 border-b pb-3">Datas Críticas</h3>
-                            <ul class="space-y-4">${datasHtml}</ul>
-                        </div>
-                    </div>
-                    <div class="lg:col-span-3">
-                        <div class="bg-slate-50 p-8 rounded-3xl border border-slate-200 shadow-sm">
-                            <h3 class="text-3xl font-black text-slate-800 mb-2 flex items-center gap-2"><i class="ph-bold ph-books text-indigo-600"></i> Estrutura do Edital Destrinchada</h3>
-                            <p class="text-slate-500 mb-8 font-medium">Clique nos tópicos abaixo para riscá-los e marcar como estudado.</p>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">${editalHtml}</div>
-                        </div>
-                    </div>
-                </div>
-            `;
+                });
+                html += `</div></div>`;
+                container.innerHTML += html;
+            });
         }
 
-        function renderCronogramaList() {
+        function toggleTopic(id) {
+            if (studiedTopics.includes(id)) {
+                studiedTopics = studiedTopics.filter(t => t !== id);
+            } else {
+                studiedTopics.push(id);
+            }
+            localStorage.setItem('endemIA_topics', JSON.stringify(studiedTopics));
+            renderRaioX();
+            updateProgress();
+        }
+
+        function updateProgress() {
+            let total = 0;
+            concursoData.conteudoProgramatico.forEach(d => total += d.topicos.length);
+            // Conta também aulas marcadas como concluídas no cronograma
+            let aulasConcluidas = studiedTopics.filter(t => t.startsWith('aula_')).length;
+            let percentRaioX = total > 0 ? (studiedTopics.filter(t => !t.startsWith('aula_')).length / total) * 50 : 0;
+            let percentCronograma = (aulasConcluidas / 56) * 50; // 56 dias totais = 50% do peso
+            
+            const perc = Math.round(percentRaioX + percentCronograma) || 0;
+            
+            document.getElementById('progress-bar').style.width = `${perc}%`;
+            document.getElementById('progress-text').innerText = `${perc}%`;
+        }
+
+        // --- RENDERIZAÇÃO: CRONOGRAMA ---
+        function renderCronograma() {
             const container = document.getElementById('cronograma-list');
-            if(!container) return;
-            
-            let html = '';
-            let completedCount = 0;
-            let currentWeek = 0;
+            container.innerHTML = '';
 
-            aulasDatabase.forEach((aula, index) => {
-                const isCompleted = progressState.aulasConcluidas[aula.id];
-                if(isCompleted) completedCount++;
-
-                const weekNum = Math.floor(index / 7) + 1;
-                if (weekNum !== currentWeek) {
-                    html += `<div class="mt-10 mb-6 flex items-center gap-4"><div class="h-px bg-slate-300 flex-grow"></div><h3 class="text-lg font-black text-slate-500 uppercase tracking-widest"><i class="ph-bold ph-calendar-check"></i> Semana ${weekNum}</h3><div class="h-px bg-slate-300 flex-grow"></div></div>`;
-                    currentWeek = weekNum;
-                }
-
-                const isSimulado = aula.disciplina.includes("Simulado");
-                const isRevisao = aula.disciplina.includes("Revisão");
+            aulasDatabase.forEach(aula => {
+                const isDone = studiedTopics.includes('aula_' + aula.id);
+                // Como agora todas as aulas estão populadas com o mock profundo, isLiberada é sempre true se len > 0
+                const isLiberada = aula.questoes && aula.questoes.length > 0;
                 
-                let bgClass = 'bg-white hover:border-indigo-400 border-slate-200 hover:shadow-md';
-                let iconClass = 'ph-book-open text-indigo-600';
-                let iconBgClass = 'bg-indigo-50';
+                let btnClass = '';
+                let btnColor = '';
+                let status = '';
 
-                if (isSimulado) {
-                    bgClass = 'bg-gradient-to-r from-slate-800 to-slate-900 border-slate-700 text-white hover:shadow-lg';
-                    iconClass = 'ph-target text-emerald-400';
-                    iconBgClass = 'bg-slate-800/50 border border-slate-600';
-                } else if (isRevisao) {
-                    bgClass = 'bg-amber-50 hover:border-amber-400 border-amber-200 hover:shadow-md';
-                    iconClass = 'ph-arrows-clockwise text-amber-600';
-                    iconBgClass = 'bg-amber-100';
+                if (isDone) {
+                    btnClass = 'bg-green-50 border-green-300 opacity-75';
+                    btnColor = 'text-green-800';
+                    status = '<span class="bg-green-200 text-green-800 text-xs font-black px-2 py-1 rounded">CONCLUÍDA</span>';
+                } else if (isLiberada) {
+                    btnClass = 'bg-blue-900 text-white hover:bg-blue-800 shadow-md transform hover:-translate-y-1';
+                    btnColor = 'text-white';
+                    status = '<span class="bg-yellow-400 text-blue-900 text-xs font-black px-2 py-1 rounded shadow">AULA LIBERADA</span>';
+                } else {
+                    // Fallback (não deve acontecer com o mock completo)
+                    btnClass = 'bg-white border-2 border-slate-200 hover:border-blue-400 text-slate-700 hover:shadow-md';
+                    btnColor = 'text-slate-700';
+                    status = '<span class="bg-slate-100 text-slate-500 text-xs font-bold px-2 py-1 rounded border border-slate-200">GERAR COM IA</span>';
                 }
 
-                html += `
-                    <div onclick="openAula(${aula.id})" class="cursor-pointer transition-all transform hover:-translate-y-1 border-2 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm ${bgClass} ${isCompleted ? 'opacity-60 grayscale-[40%]' : ''}">
-                        <div class="flex items-center gap-4 sm:gap-6">
-                            <div class="w-14 h-14 sm:w-16 sm:h-16 ${iconBgClass} rounded-2xl flex items-center justify-center shrink-0 border shadow-sm">
-                                <i class="ph-bold ${iconClass} text-2xl sm:text-3xl"></i>
+                container.innerHTML += `
+                    <div class="flex items-center gap-3">
+                        <button onclick="toggleAulaStatus(${aula.id})" class="w-12 h-12 shrink-0 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${isDone ? 'bg-green-500 border-green-500 text-white shadow-inner scale-95' : 'bg-slate-100 border-slate-300 text-slate-300 hover:border-green-400 hover:text-green-400'}" title="Marcar como Estudada">
+                            <i class="ph-bold ph-check text-2xl"></i>
+                        </button>
+                        <div onclick="requestAula(${aula.id})" class="flex-1 cursor-pointer rounded-xl p-5 transition-all duration-200 flex items-center justify-between ${btnClass}">
+                            <div class="${btnColor}">
+                                <p class="text-sm font-black mb-1 opacity-80 flex items-center gap-2">
+                                    ${aula.tipo === 'simulado' ? '<i class="ph-fill ph-target"></i>' : (aula.tipo === 'revisao' ? '<i class="ph-fill ph-arrows-clockwise"></i>' : '<i class="ph-fill ph-book-open"></i>')} 
+                                    ${aula.dia}
+                                </p>
+                                <h4 class="text-lg font-bold">${aula.disciplina}</h4>
+                                <p class="text-sm opacity-90">${aula.tema}</p>
                             </div>
-                            <div>
-                                <div class="text-xs font-bold ${isSimulado ? 'text-slate-400' : 'text-slate-500'} uppercase tracking-widest mb-1 flex items-center gap-2">
-                                    Dia ${aula.id} • ${aula.dia}
-                                    ${isCompleted ? '<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded border border-emerald-300 shadow-sm"><i class="ph-bold ph-check"></i> Finalizada</span>' : '<span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded border border-indigo-200 shadow-sm">Padrão Estratégia</span>'}
-                                </div>
-                                <h3 class="text-lg sm:text-xl font-black ${isSimulado ? 'text-white' : 'text-slate-800'}">${aula.disciplina}</h3>
-                                <p class="${isSimulado ? 'text-slate-300' : 'text-slate-600'} font-medium text-sm sm:text-base mt-0.5">${aula.tema}</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-end shrink-0">
-                            <div class="w-12 h-12 bg-emerald-100 text-emerald-700 border border-emerald-300 rounded-full flex justify-center items-center shadow-sm hover:scale-110 transition-transform">
-                                <i class="ph-fill ph-play text-xl"></i>
-                            </div>
+                            <div>${status}</div>
                         </div>
                     </div>
                 `;
             });
-
-            container.innerHTML = html;
-            document.getElementById('global-progress-text').innerText = `${completedCount}/84`;
         }
 
-        function openAula(id) {
-            const lesson = aulasDatabase.find(a => a.id === id);
-            if(!lesson) return;
+        function toggleAulaStatus(id) {
+            const topicId = 'aula_' + id;
+            if (studiedTopics.includes(topicId)) {
+                studiedTopics = studiedTopics.filter(t => t !== topicId);
+            } else {
+                studiedTopics.push(topicId);
+            }
+            localStorage.setItem('endemIA_topics', JSON.stringify(studiedTopics));
+            renderCronograma();
+            updateProgress();
+        }
 
-            currentLessonId = id;
-            answers = progressState.questoesAcertadas[id] || {};
-            score = 0;
-            Object.values(answers).forEach(ans => { if(ans.correct) score++; });
+        // --- LÓGICA DE AULA E INTERAÇÃO ---
+        function requestAula(id) {
+            // Efeito de simulação de carregamento da IA
+            document.getElementById('loading-ia').classList.remove('hidden');
+            document.getElementById('loading-ia').classList.add('flex');
             
-            currentQuestions = [...lesson.questoes];
+            setTimeout(() => {
+                document.getElementById('loading-ia').classList.add('hidden');
+                document.getElementById('loading-ia').classList.remove('flex');
+                
+                const aulaInfo = aulasDatabase.find(a => a.id === id);
+                if(aulaInfo && aulaInfo.questoes.length > 0) {
+                    carregarAula(aulaInfo);
+                } else {
+                    console.error('Erro ao carregar a aula. Conteúdo não encontrado.');
+                }
+            }, 500);
+        }
 
-            document.querySelectorAll('.view-section').forEach(v => v.classList.add('hidden'));
-            document.getElementById('view-aula').classList.remove('hidden');
-            window.scrollTo(0,0);
+        function carregarAula(aula) {
+            currentAulaData = aula;
+            
+            // Reseta Status
+            questoesStatus = aula.questoes.map(q => ({
+                id: q.id,
+                respondida: false,
+                acertou: false,
+                tesouras: [false, false, false, false, false]
+            }));
 
-            const isSimulado = lesson.disciplina.includes("Simulado");
-
-            document.getElementById('lesson-header-content').innerHTML = `
-                <div class="flex items-center gap-6 fade-in">
-                    <div class="w-20 h-20 ${isSimulado ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-white/20 text-white border-white/20'} rounded-3xl flex items-center justify-center backdrop-blur-sm border shadow-xl">
-                        <i class="ph-bold ${isSimulado ? 'ph-target' : 'ph-book-open'} text-5xl"></i>
-                    </div>
-                    <div>
-                        <div class="mb-3"><span class="bg-indigo-800 text-indigo-100 text-sm font-bold px-4 py-1.5 rounded-lg border border-indigo-700 uppercase tracking-widest shadow-inner"><i class="ph-bold ph-calendar"></i> DIA ${lesson.id} • ${lesson.dia}</span></div>
-                        <h2 class="text-3xl md:text-5xl font-black text-white mb-2 leading-tight">${lesson.disciplina}</h2>
-                        <p class="text-xl font-medium text-indigo-200">${lesson.tema}</p>
-                    </div>
-                </div>
+            // Preenche Header da Aula
+            document.getElementById('aula-header').innerHTML = `
+                <p class="text-blue-600 font-bold uppercase tracking-wider text-sm mb-1">${aula.dia} &bull; ${aula.disciplina}</p>
+                <h2 class="text-3xl font-black text-slate-800">${aula.tema}</h2>
             `;
-            
-            const theoryContainer = document.getElementById('lesson-theory');
-            if (lesson.teoria && lesson.teoria !== "") {
-                theoryContainer.classList.remove('hidden');
-                theoryContainer.innerHTML = `<div class="fade-in">${lesson.teoria}</div>`;
+
+            // Controle de Exibição via Tipo de Aula
+            const divCantoSaber = document.getElementById('canto-saber');
+            const divCofreWrapper = document.getElementById('cofre-wrapper');
+            const txtPraticandoTit = document.getElementById('titulo-praticando');
+            const txtPraticandoSub = document.getElementById('subtitulo-praticando');
+
+            if (aula.tipo === 'simulado') {
+                divCantoSaber.style.display = 'none';
+                divCofreWrapper.style.display = 'none';
+                txtPraticandoTit.innerText = `Simulado Master FUNCERN (${aula.questoes.length} Questões)`;
+                txtPraticandoSub.innerText = "Atenção: Simulados testam a sua resistência pura e não possuem teoria de apoio inicial. Faça com foco total!";
+            } else if (aula.tipo === 'revisao') {
+                divCantoSaber.style.display = 'block';
+                divCofreWrapper.style.display = 'block';
+                divCantoSaber.innerHTML = aula.teoria;
+                document.getElementById('cofre-perolas').innerHTML = `<ul class="space-y-3">${aula.dicas}</ul>`;
+                txtPraticandoTit.innerText = `Bateria de Revisão Cruzada (${aula.questoes.length} Questões)`;
+                txtPraticandoSub.innerText = "Questões mescladas de todos os assuntos da semana. Avalie seus pontos cegos.";
             } else {
-                theoryContainer.classList.add('hidden');
+                divCantoSaber.style.display = 'block';
+                divCofreWrapper.style.display = 'block';
+                divCantoSaber.innerHTML = aula.teoria;
+                document.getElementById('cofre-perolas').innerHTML = `<ul class="space-y-3">${aula.dicas}</ul>`;
+                txtPraticandoTit.innerText = `Praticando para Fixar (${aula.questoes.length} Questões)`;
+                txtPraticandoSub.innerText = "Bateria de exercícios escalonada. Use a tesoura para eliminar alternativas absurdas.";
             }
 
-            renderQuestionsUI();
-            document.getElementById('lesson-questions-area').classList.remove('hidden');
+            // Renderiza Questões
+            renderQuestoesUI();
+
+            // Mostra Aba de Aula
+            document.getElementById('tab-aula').classList.remove('hidden');
+            switchTab('aula-ativa');
+            window.scrollTo(0, 0);
         }
 
-        function renderQuestionsUI() {
-            const container = document.getElementById('questions-container');
-            let html = '';
+        function renderQuestoesUI() {
+            const container = document.getElementById('questoes-container');
+            container.innerHTML = '';
 
-            currentQuestions.forEach((q, qIndex) => {
-                let badgeClass = 'bg-slate-100 text-slate-800 border-slate-300';
-                if(q.d === 'Fácil') badgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
-                if(q.d === 'Média') badgeClass = 'bg-amber-100 text-amber-800 border-amber-300';
-                if(q.d === 'Difícil') badgeClass = 'bg-rose-100 text-rose-800 border-rose-300';
-
-                const qAnswered = answers[qIndex];
-
-                html += `
-                    <div class="bg-white rounded-3xl p-8 md:p-10 border border-slate-200 shadow-sm fade-in hover:shadow-md transition-shadow">
-                        <div class="flex justify-between items-start mb-8 border-b border-slate-100 pb-5">
-                            <span class="bg-indigo-900 text-white font-black text-2xl w-14 h-14 flex items-center justify-center rounded-2xl shadow-lg">${qIndex + 1}</span>
-                            <span class="border ${badgeClass} text-sm font-bold px-4 py-1.5 rounded-full uppercase tracking-wider flex items-center gap-2"><i class="ph-bold ph-gauge"></i> Nível: ${q.d}</span>
-                        </div>
-                        <h4 class="text-2xl font-bold text-slate-800 mb-8 leading-relaxed text-justify">${q.t}</h4>
-                        <div class="space-y-4">
-                            ${q.o.map((alt, altIndex) => {
-                                // 4 Alternativas para a FUNCERN
-                                const letters = ['A', 'B', 'C', 'D'];
-                                let optClass = 'bg-slate-50 border-2 border-slate-200 cursor-pointer hover:bg-indigo-50 hover:border-indigo-400 shadow-sm';
-                                let iconHtml = letters[altIndex];
-                                let letterClass = 'border-slate-300 text-slate-500 bg-white';
-
-                                if (qAnswered) {
-                                    const isCorrectOpt = (altIndex === q.a);
-                                    const isSelectedOpt = (qAnswered.selected === altIndex);
-                                    optClass = 'locked opacity-40 border-slate-200 bg-slate-50';
-                                    
-                                    if (isCorrectOpt) {
-                                        optClass = 'locked correct-answer bg-emerald-50 border-emerald-600 shadow-md';
-                                        iconHtml = '<i class="ph-bold ph-check text-2xl"></i>';
-                                        letterClass = 'border-emerald-600 text-emerald-700 bg-emerald-100';
-                                    } else if (isSelectedOpt) {
-                                        optClass = 'locked wrong-answer bg-rose-50 border-rose-600 shadow-md';
-                                        iconHtml = '<i class="ph-bold ph-x text-2xl"></i>';
-                                        letterClass = 'border-rose-600 text-rose-700 bg-rose-100';
-                                    }
-                                }
-
-                                return `
-                                    <div class="alt-container relative rounded-2xl p-5 flex gap-5 items-center transition-all ${optClass}" id="alt-${qIndex}-${altIndex}" onclick="selectAnswer(${qIndex}, ${altIndex})">
-                                        <div class="flex-grow flex items-center gap-5 pointer-events-none">
-                                            <div class="w-12 h-12 rounded-full border-2 flex items-center justify-center font-black text-lg shrink-0 option-letter shadow-inner ${letterClass}">${iconHtml}</div>
-                                            <span class="text-slate-700 font-semibold text-lg pointer-events-none leading-relaxed">${alt}</span>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                `;
+            currentAulaData.questoes.forEach((q, index) => {
+                const status = questoesStatus[index];
                 
-                if (qAnswered) {
-                    const explColor = qAnswered.correct ? 'border-emerald-500 bg-emerald-50' : 'border-rose-500 bg-rose-50';
-                    const explTitle = qAnswered.correct ? 'Precisão Absoluta!' : 'Atenção ao Ponto Cego.';
-                    const explIcon = qAnswered.correct ? 'ph-check-circle text-emerald-600' : 'ph-x-circle text-rose-600';
+                let badgeColor = q.nivel === 'facil' ? 'bg-green-200 text-green-800' : (q.nivel === 'medio' ? 'bg-yellow-200 text-yellow-800' : 'bg-red-200 text-red-800');
+                let badgeText = q.nivel.toUpperCase();
+
+                let html = `
+                    <div class="bg-white border-2 border-slate-200 p-6 rounded-2xl shadow-sm" id="questao-card-${index}">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="font-black text-xl text-blue-900">Questão ${index + 1}</span>
+                            <span class="text-xs font-bold px-2 py-1 rounded ${badgeColor}">${badgeText}</span>
+                        </div>
+                        <p class="text-lg text-slate-800 font-medium mb-6">${q.enunciado}</p>
+                        <ul class="space-y-3">
+                `;
+
+                q.alternativas.forEach((alt, altIndex) => {
+                    const isCortada = status.tesouras[altIndex] ? 'cortada' : '';
+                    let stateClasses = 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'; // Default
                     
-                    let explHtml = '<div class="space-y-4 mt-6 pt-6 border-t border-slate-200">';
-                    q.e.forEach((expText, eIdx) => {
-                        const isAltCorreta = (eIdx === q.a);
-                        const cClass = isAltCorreta ? 'text-emerald-900 bg-emerald-100 border-emerald-300' : 'text-slate-700 bg-white border-slate-200';
-                        const iIcon = isAltCorreta ? 'ph-check-circle text-emerald-600' : 'ph-x-circle text-rose-400';
-                        explHtml += `
-                            <div class="p-4 rounded-xl border ${cClass} text-sm flex gap-4 shadow-sm">
-                                <i class="ph-fill ${iIcon} text-2xl shrink-0 mt-0.5"></i>
-                                <div>
-                                    <div class="font-black mb-1 text-slate-800 text-base">Alternativa ${['A','B','C','D'][eIdx]} ${isAltCorreta ? '<span class="text-emerald-600">(GABARITO)</span>' : '<span class="text-rose-600">(INCORRETA)</span>'}</div>
-                                    <div class="font-medium opacity-90 leading-relaxed text-base text-justify">${expText}</div>
-                                </div>
-                            </div>
-                        `;
+                    if (status.respondida) {
+                        if (altIndex === q.correta) stateClasses = 'alt-correta';
+                        else if (status.respostaSelecionada === altIndex) stateClasses = 'alt-errada';
+                        else stateClasses = 'alt-inativa bg-slate-50 border-slate-200';
+                    }
+
+                    html += `
+                        <li class="flex items-stretch gap-2">
+                            <button onclick="toggleTesoura(${index}, ${altIndex})" class="tesoura-btn flex items-center justify-center bg-slate-200 p-3 rounded-lg text-slate-500 border border-slate-300" ${status.respondida ? 'disabled' : ''} title="Cortar/Restaurar">
+                                <i class="ph-bold ph-scissors text-xl"></i>
+                            </button>
+                            <button onclick="responderQuestao(${index}, ${altIndex})" class="alternativa-item flex-1 text-left p-4 rounded-lg border-2 ${stateClasses} ${isCortada}" ${status.respondida ? 'disabled' : ''}>
+                                ${alt}
+                            </button>
+                        </li>
+                    `;
+                });
+
+                html += `</ul>`;
+
+                // Explicações (Gabarito Comentado Letra por Letra)
+                if (status.respondida) {
+                    html += `
+                        <div class="mt-6 p-5 bg-slate-100 rounded-xl border border-slate-200 fade-in">
+                            <h4 class="font-black text-slate-800 mb-3 uppercase flex items-center gap-2">
+                                <i class="ph-fill ph-chalkboard-teacher text-blue-600 text-xl"></i> Comentário do Professor
+                            </h4>
+                            <ul class="space-y-3 text-sm text-slate-700">
+                    `;
+                    q.explicacoes.forEach((exp, expIndex) => {
+                        const isCorrect = expIndex === q.correta;
+                        const letter = ['A', 'B', 'C', 'D', 'E'][expIndex];
+                        const icon = isCorrect ? '<i class="ph-fill ph-check-circle text-green-500"></i>' : '<i class="ph-fill ph-x-circle text-red-500"></i>';
+                        html += `<li class="flex items-start gap-2">${icon} <span><b>Alternativa ${letter}:</b> ${exp}</span></li>`;
                     });
-                    explHtml += '</div>';
-
-                    html += `<div id="expl-${qIndex}" class="mt-10 p-8 rounded-3xl border-l-8 text-slate-700 font-medium shadow-lg fade-in ${explColor}">
-                                <h5 class="font-black mb-4 flex items-center gap-3 text-2xl uppercase tracking-wide"><i class="ph-fill ${explIcon} text-4xl"></i> ${explTitle} Raio-X da Banca:</h5>
-                                ${explHtml}
-                             </div></div>`;
-                } else {
-                    html += `<div id="expl-${qIndex}" class="hidden mt-10 p-8 rounded-3xl border-l-8 text-slate-700 font-medium shadow-lg"></div></div>`;
+                    html += `</ul></div>`;
                 }
-            });
 
-            container.innerHTML = html;
+                html += `</div>`;
+                container.innerHTML += html;
+            });
         }
 
-        function selectAnswer(qIndex, altIndex) {
-            if(answers[qIndex] !== undefined) return; 
-            
-            const question = currentQuestions[qIndex];
-            const isCorrect = (altIndex === question.a);
-            
-            answers[qIndex] = { selected: altIndex, correct: isCorrect };
-            if(isCorrect) score++;
-
-            progressState.questoesAcertadas[currentLessonId] = answers;
-            localStorage.setItem('orientia_progress_state', JSON.stringify(progressState));
-
-            question.o.forEach((_, idx) => {
-                const el = document.getElementById(`alt-${qIndex}-${idx}`);
-                el.classList.add('locked');
-                el.classList.remove('hover:bg-indigo-50', 'hover:border-indigo-400', 'cursor-pointer');
-                
-                const letterDiv = el.querySelector('.option-letter');
-
-                if (idx === question.a) {
-                    el.classList.add('correct-answer', 'bg-emerald-50', 'border-emerald-600', 'shadow-md');
-                    letterDiv.innerHTML = '<i class="ph-bold ph-check text-2xl"></i>';
-                    letterDiv.classList.replace('border-slate-300', 'border-emerald-600');
-                    letterDiv.classList.replace('text-slate-500', 'text-emerald-700');
-                    letterDiv.classList.replace('bg-white', 'bg-emerald-100');
-                } else if (idx === altIndex && !isCorrect) {
-                    el.classList.add('wrong-answer', 'bg-rose-50', 'border-rose-600', 'shadow-md');
-                    letterDiv.innerHTML = '<i class="ph-bold ph-x text-2xl"></i>';
-                    letterDiv.classList.replace('border-slate-300', 'border-rose-600');
-                    letterDiv.classList.replace('text-slate-500', 'text-rose-700');
-                    letterDiv.classList.replace('bg-white', 'bg-rose-100');
-                } else {
-                    el.classList.add('opacity-40', 'bg-slate-50');
-                }
-            });
-
-            const explDiv = document.getElementById(`expl-${qIndex}`);
-            explDiv.classList.remove('hidden');
-            
-            let explHtml = '<div class="space-y-4 mt-6 pt-6 border-t border-slate-200">';
-            question.e.forEach((expText, eIdx) => {
-                const isAltCorreta = (eIdx === question.a);
-                const cClass = isAltCorreta ? 'text-emerald-900 bg-emerald-100 border-emerald-300' : 'text-slate-700 bg-white border-slate-200';
-                const iIcon = isAltCorreta ? 'ph-check-circle text-emerald-600' : 'ph-x-circle text-rose-400';
-                explHtml += `
-                    <div class="p-4 rounded-xl border ${cClass} text-sm flex gap-4 shadow-sm">
-                        <i class="ph-fill ${iIcon} text-2xl shrink-0 mt-0.5"></i>
-                        <div>
-                            <div class="font-black mb-1 text-slate-800 text-base">Alternativa ${['A','B','C','D'][eIdx]} ${isAltCorreta ? '<span class="text-emerald-600">(GABARITO)</span>' : '<span class="text-rose-600">(INCORRETA)</span>'}</div>
-                            <div class="font-medium opacity-90 leading-relaxed text-base text-justify">${expText}</div>
-                        </div>
-                    </div>
-                `;
-            });
-            explHtml += '</div>';
-
-            if (isCorrect) {
-                explDiv.classList.add('border-emerald-500', 'bg-emerald-50', 'fade-in');
-                explDiv.innerHTML = `<h5 class="text-emerald-800 font-black mb-4 flex items-center gap-3 text-2xl uppercase tracking-wide"><i class="ph-fill ph-check-circle text-4xl"></i> Precisão Absoluta! Raio-X FUNCERN:</h5>${explHtml}`;
-            } else {
-                explDiv.classList.add('border-rose-500', 'bg-rose-50', 'fade-in');
-                explDiv.innerHTML = `<h5 class="text-rose-800 font-black mb-4 flex items-center gap-3 text-2xl uppercase tracking-wide"><i class="ph-fill ph-x-circle text-4xl"></i> Atenção ao Ponto Cego. Raio-X FUNCERN:</h5>${explHtml}`;
-            }
+        // Lógica da Tesoura Toggle
+        function toggleTesoura(qIndex, altIndex) {
+            if (questoesStatus[qIndex].respondida) return;
+            questoesStatus[qIndex].tesouras[altIndex] = !questoesStatus[qIndex].tesouras[altIndex];
+            renderQuestoesUI();
         }
 
-        function finishLesson() {
-            const total = currentQuestions.length;
-            const answered = Object.keys(answers).length;
+        // Lógica de Resposta
+        function responderQuestao(qIndex, altIndex) {
+            const status = questoesStatus[qIndex];
+            if (status.respondida) return;
+
+            status.respondida = true;
+            status.respostaSelecionada = altIndex;
+            status.acertou = (altIndex === currentAulaData.questoes[qIndex].correta);
             
-            if (answered < total) {
-                const warContainer = document.getElementById('temp-warning-container');
-                warContainer.innerHTML = `<div class="bg-rose-100 border border-rose-400 text-rose-800 px-6 py-4 rounded-xl font-bold mt-6 inline-flex items-center gap-2 shadow-sm animate-pulse text-lg"><i class="ph-bold ph-warning text-2xl"></i> Faltam ${total - answered} questões. Resolva todas para o diagnóstico.</div>`;
-                setTimeout(() => warContainer.innerHTML = '', 4000);
+            // Remove a classe de corte de todas as alternativas ao revelar o gabarito
+            status.tesouras = [false, false, false, false, false]; 
+
+            renderQuestoesUI();
+        }
+
+        // --- SISTEMA DE DIAGNÓSTICO ---
+        function finalizarAula() {
+            const total = currentAulaData.questoes.length;
+            const respondidas = questoesStatus.filter(q => q.respondida).length;
+
+            if (respondidas < total) {
+                alert(`Futuro(a) Servidor(a), resolva todas as ${total} questões antes de finalizar! Foco total!`);
                 return;
             }
 
-            document.getElementById('diag-score').innerText = `${score}/${total}`;
-            const perc = Math.round((score/total)*100);
-            document.getElementById('diag-percent').innerText = `${perc}%`;
-            
-            const quoteEl = document.getElementById('diag-quote');
-            if(perc >= 80) {
-                quoteEl.innerText = `"Desempenho de elite. Você domina este assunto no padrão FUNCERN para o cargo de Orientador Social."`;
-                document.getElementById('diag-percent').className = "text-6xl font-black text-emerald-500";
-            } else if (perc >= 50) {
-                quoteEl.innerText = `"Bom aproveitamento, mas exige leitura focada na literalidade para eliminar as pegadinhas em Legislação e Específicos."`;
-                document.getElementById('diag-percent').className = "text-6xl font-black text-amber-500";
-            } else {
-                quoteEl.innerText = `"Sinal vermelho. Retorne à teoria e releia as justificativas das alternativas erradas. Atenção máxima!"`;
-                document.getElementById('diag-percent').className = "text-6xl font-black text-rose-500";
+            // Ao finalizar, marca o dia como concluído automaticamente
+            const topicId = 'aula_' + currentAulaData.id;
+            if (!studiedTopics.includes(topicId)) {
+                studiedTopics.push(topicId);
+                localStorage.setItem('endemIA_topics', JSON.stringify(studiedTopics));
+                updateProgress();
             }
 
-            const modal = document.getElementById('diagnostic-modal');
+            let acertos = 0;
+            let erradasFacil = 0, erradasMedio = 0, erradasDificil = 0;
+
+            questoesStatus.forEach((status, i) => {
+                const nivel = currentAulaData.questoes[i].nivel;
+                if (status.acertou) {
+                    acertos++;
+                } else {
+                    if (nivel === 'facil') erradasFacil++;
+                    if (nivel === 'medio') erradasMedio++;
+                    if (nivel === 'dificil') erradasDificil++;
+                }
+            });
+
+            document.getElementById('diag-score').innerText = acertos;
+            document.getElementById('diag-total').innerText = total;
+
+            // Análise de Pontos Fracos
+            let fracosTexto = "";
+            if (erradasFacil > 0) fracosTexto += `Atenção vermelha! Você errou ${erradasFacil} questões fáceis. Revise a leitura literal da Lei (Artigos iniciais). `;
+            else if (erradasMedio > 0) fracosTexto += `Cuidado com as pegadinhas nos prazos! Você errou ${erradasMedio} questões de nível médio. `;
+            else if (erradasDificil > 0) fracosTexto += `Errou apenas questões difíceis (${erradasDificil}). Normal! Revise os comentários do professor para aprofundar a jurisprudência/exceções.`;
+            else fracosTexto = "Gabaritou! Nenhum ponto fraco nesta bateria.";
+            document.getElementById('diag-fracos').innerText = fracosTexto;
+
+            // Análise de Pontos Fortes
+            let fortesTexto = "";
+            if (acertos === total) fortesTexto = "Desempenho de ALTO RENDIMENTO! O 1º lugar é seu.";
+            else if (acertos >= total * 0.7) fortesTexto = "Ótima base teórica. Você domina as regras gerais do Estatuto.";
+            else fortesTexto = "Você demonstrou coragem de enfrentar a bateria. O erro de hoje é o acerto da prova amanhã!";
+            document.getElementById('diag-fortes').innerText = fortesTexto;
+
+            // Frases Motivacionais (Aleatórias)
+            const frases = [
+                "A dor da disciplina pesa gramas, a dor do arrependimento pesa toneladas. Mantenha o foco!",
+                "Não pare quando estiver cansado. Pare apenas quando estiver concursado(a) na Prefeitura de Equador!",
+                "O sacrifício é temporário, mas o Diário Oficial é para sempre.",
+                "A banca FUNCERN não perdoa quem tem preguiça de ler a Lei Seca. Continue cavando a sua vaga!"
+            ];
+            document.getElementById('diag-frase').innerText = `"${frases[Math.floor(Math.random() * frases.length)]}"`;
+
+            // Exibe Modal
+            const modal = document.getElementById('modal-diagnostico');
             modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            setTimeout(() => {
-                document.getElementById('diagnostic-content').classList.remove('scale-95', 'opacity-0');
-                document.getElementById('diagnostic-content').classList.add('scale-100', 'opacity-100');
-            }, 10);
-
-            progressState.aulasConcluidas[currentLessonId] = true;
-            localStorage.setItem('orientia_progress_state', JSON.stringify(progressState));
-            renderCronogramaList(); 
+            setTimeout(() => { document.getElementById('modal-content').classList.remove('scale-95'); document.getElementById('modal-content').classList.add('scale-100'); }, 10);
         }
 
-        function closeDiagnostic() {
-            const modal = document.getElementById('diagnostic-modal');
-            document.getElementById('diagnostic-content').classList.remove('scale-100', 'opacity-100');
-            document.getElementById('diagnostic-content').classList.add('scale-95', 'opacity-0');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-                switchTab('cronograma');
-            }, 300);
+        function fecharDiagnostico() {
+            document.getElementById('modal-diagnostico').classList.add('hidden');
+            document.getElementById('modal-content').classList.add('scale-95');
+            switchTab('cronograma');
         }
 
-        document.addEventListener('DOMContentLoaded', initApp);
+        // --- NAVEGAÇÃO DE ABAS ---
+        function switchTab(tabId) {
+            ['raiox', 'cronograma', 'aula'].forEach(id => {
+                document.getElementById(`tab-${id === 'aula-ativa' ? 'aula' : id}`).classList.remove('border-yellow-400', 'text-yellow-400', 'bg-slate-900');
+                document.getElementById(`tab-${id === 'aula-ativa' ? 'aula' : id}`).classList.add('border-transparent', 'text-slate-400');
+                
+                // Mapeamento id aba para section view
+                let viewId = tabId === 'aula-ativa' ? 'view-aula' : `view-${id}`;
+                let curViewId = id === 'aula-ativa' ? 'view-aula' : `view-${id}`;
+                document.getElementById(curViewId).classList.add('hidden');
+                document.getElementById(curViewId).classList.remove('block');
+            });
+
+            let activeTabBtn = document.getElementById(`tab-${tabId === 'aula-ativa' ? 'aula' : tabId}`);
+            activeTabBtn.classList.remove('border-transparent', 'text-slate-400');
+            activeTabBtn.classList.add('border-yellow-400', 'text-yellow-400', 'bg-slate-900');
+            
+            let targetView = tabId === 'aula-ativa' ? 'view-aula' : `view-${tabId}`;
+            document.getElementById(targetView).classList.remove('hidden');
+            document.getElementById(targetView).classList.add('block');
+            window.scrollTo(0, 0);
+        }
     </script>
 </body>
 </html>
